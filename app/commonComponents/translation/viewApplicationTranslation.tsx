@@ -1,0 +1,83 @@
+const viewApplicationTranslation = {
+    en: {
+      // Card titles
+      t1: "Basic Information",
+      t2: "Income Information",
+      t3: "Character References",
+      t4: "Collateral Details",
+  
+      // Personal Details
+      t5: "Date of Birth",
+      t6: "Address",
+      t7: "Marital Status",
+      t8: "Spouse Name",
+      t9: "Spouse Occupation",
+      t10: "Children",
+      t11: "Source of Income",
+      t12: "Occupation",
+      t13: "Company",
+      t14: "EmploymentStatus",
+      t15: "Business Type",
+      t16: "Business Name",
+      t17: "Date Started",
+      t18: "Business Location",
+      t19: "Monthly Income",
+      t20: "Reference",
+      t21: "Name",
+      t22: "Contact Number",
+      t23: "Relationship",
+      t24: "Files",
+      t25: "Loan Computation",
+      t26: "Loan Purpose",
+      t27: "Principal",
+      t28: "Interest Rate",
+      t29: "Loan Term",
+      t30: "Total Interest",
+      t31: "Total Payable",
+      t32: "Monthly Due",
+      t33: "Months",
+      t34: "Applicant Profile", 
+    },
+    ceb: {
+      // Card titles
+      t1: "Panguna nga Impormasyon",
+      t2: "Impormasyon sa Kita",
+      t3: "Mga Referensiya sa Karakter",
+      t4: "Detalye sa Kolateral",
+  
+      // Personal Details
+      t5: "Petsa sa Pagkatawo",
+      t6: "Address",
+      t7: "Kahimtang sa Pagminyo",
+      t8: "Ngalan sa Asawa",
+      t9: "Trabaho sa Asawa",
+      t10: "Mga Anak",
+      t11: "Tinubdan sa Kita",
+      t12: "Trabaho",
+      t13: "Kompanya",
+      t14: "Kahimtang sa Pagtrabaho",
+      t15: "Klase sa Negosyo",
+      t16: "Ngalan sa Negosyo",
+      t17: "Petsa sa Pagsugod",
+      t18: "Lokasyon sa Negosyo",
+      t19: "Kinatibuk-ang Kita sa Buwan",
+      t20: "Referensiya",
+      t21: "Ngalan",
+      t22: "Numero sa Kontak",
+      t23: "Relasyon",
+      t24: "Mga Papeles",
+      t25: "Kalkulasyon sa Loan",
+      t26: "Katuyoan sa Loan",
+      t27: "Punong Halaga",
+      t28: "Rate sa Interes",
+      t29: "Termino sa Loan",
+      t30: "Kinabuok nga Interes",
+      t31: "Kinabuok nga Bayran",
+      t32: "Bayad Kada Buwan",
+      t33: "ka buwan",
+      t34: "Impormasyon sa Aplikante"
+    }
+  };
+  
+  export default viewApplicationTranslation;
+  

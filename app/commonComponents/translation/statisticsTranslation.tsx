@@ -1,0 +1,157 @@
+const statisticTranslation = {
+  en: {
+    // Application Status
+    s1: "Applied",
+    s3: "Approved",
+    s4: "Denied",
+
+    // Collection Status
+    s5: "Collectables",
+    s6: "Collected",
+    s7: "Unpaid Collections",
+
+    // Header
+    h1: "Financial Overview",
+    h2: "Collection Status",
+    h3: "Application Status",
+    h4: "Loan Types",
+    h5: "Daily Progress",
+    h6: "Daily Collection",
+    h7: "Overall Progress",
+    h8: "Overall Collection",
+
+    // Chart labels
+    c1: "Monthly Interest",
+    c2: "Application Status",
+    c3: "Loan Types",
+    c4: "Applications",
+    c5: "With Collateral",
+    c6: "Without Collateral",
+    c7: "Open-Term",
+    c8: "Collectables",
+    c9: "Collected",
+    c10: "Unpaid",
+    c12: "Top 5 Borrowers",
+    c13: "Top Collectors",
+    c14: "Top 5 Agents",
+    c15: "Total Loans",
+    c16: "Total Applications",
+
+    // Messages
+    m1: "No borrowers found",
+    m2: "No agents found",
+    m3: "No collectors found",
+    m4: "Loading charts...",
+
+    // Dashboard
+    d1: "Analytics Dashboard",
+    d2: "Generating PDF...",
+    d3: "Export to PDF",
+    d4: "Quick Stats",
+    d5: "Total Borrowers",
+    d6: "Total Disbursed",
+    d7: "Total Collected",
+    d8: "Borrowers Overview",
+    d9: "Active Borrowers",
+    d10: "Top Borrowers",
+    d11: "No borrowers data",
+    d12: "Borrowers Over Time",
+    d13: "New Borrowers",
+    d14: "Active Borrowers",
+    d15: "Loan Overview",
+    d16: "Total Loans",
+    d17: "Closed Loans",
+    d18: "Top Agents",
+    d19: "No agents available",
+    d20: "Loan Disbursement Over Time",
+    d21: "Collection Overview",
+    d22: "Collectables",
+    d23: "Top Collectors",
+    d24: "No collectors available",
+    d25: "Loan Applications Overview",
+    d26: "Total Applications",
+    d27: "Pending Applications",
+    d28: "Approved Applications",
+    d29: "Denied Applications",
+    d30: "Applications by Type"
+  },
+  ceb: {
+    // Application Status
+    s1: "Gipasa",
+    s2: "Nagpaabot",
+    s3: "Giaprubahan",
+    s4: "Gidumili",
+
+    // Collection Status
+    s5: "Mga Kolektables",
+    s6: "Nakolekta",
+    s7: "Wala Mabayri",
+
+    // Header
+    h1: "Pinansyal nga Pagtan-aw",
+    h2: "Status sa Koleksyon",
+    h3: "Status sa Aplikasyon",
+    h4: "Klase sa Loan",
+    h5: "Adlaw-adlaw nga Progreso",      
+    h6: "Adlaw-adlaw nga Koleksyon",    
+    h7: "Kinabug-osang Progreso",     
+    h8: "Kinabug-osang Koleksyon",     
+
+    // Chart labels
+    c1: "Monthly nga Interest",
+    c2: "Status sa Aplikasyon",
+    c3: "Klase sa Pahulam",
+    c4: "Mga Aplikasyon",
+    c5: "Uban sa Collateral",
+    c6: "Wala sa Collateral",
+    c7: "Open-Term",
+    c8: "Mga Kolektables",
+    c9: "Nakolekta",
+    c10: "Wala Mabayri",
+    c12: "Top 5 nga mga Nanghulam",
+    c13: "Top nga mga Kolektor",
+    c14: "Top 5 nga mga Ahente",
+    c15: "Kinatibuk-ang Pahulam",
+    c16: "Kinatibuk-ang Aplikasyon",
+
+    // Messages
+    m1: "Walay nakit-an nga mga nanghulam",
+    m2: "Walay nakit-an nga mga ahente",
+    m3: "Walay nakit-an nga mga kolektor",
+    m4: "Nag-load sa mga chart...",
+
+    // Dashboard
+    d1: "Analytics Dashboard",
+    d2: "Nag-generate og PDF...",
+    d3: "I-export ang PDF",
+    d4: "Quick Stats",
+    d5: "Kinatibuk-ang mga Nanghulam",
+    d6: "Kinatibuk-ang Gi-disburse",
+    d7: "Kinatibuk-ang Nakolekta",
+    d8: "Overview sa mga Nanghulam",
+    d9: "Aktibong mga Nanghulam",
+    d10: "Top nga mga Nanghulam",
+    d11: "Walay datos sa mga nanghulam",
+    d12: "Mga Nanghulam sa Paglabay sa Panahon",
+    d13: "Bag-ong mga Nanghulam",
+    d14: "Aktibong mga Nanghulam",
+    d15: "Overview sa Pahulam",
+    d16: "Kinatibuk-ang Pahulam",
+    d17: "Siradong Pahulam",
+    d18: "Top nga mga Agent",
+    d19: "Walay available nga mga agent",
+    d20: "Loan Disbursement sa Paglabay sa Panahon",
+    d21: "Overview sa Koleksyon",
+    d22: "Mga Kolektables",
+    d23: "Top nga mga Kolektor",
+    d24: "Walay available nga mga kolektor",
+    d25: "Overview sa Loan Applications",
+    d26: "Kinatibuk-ang Aplikasyon",
+    d27: "Nagpaabot nga Aplikasyon",
+    d28: "Giaprubahan nga Aplikasyon",
+    d29: "Gidumili nga Aplikasyon",
+    d30: "Mga Aplikasyon sumala sa Tipo"
+  },
+};
+
+export default statisticTranslation;
