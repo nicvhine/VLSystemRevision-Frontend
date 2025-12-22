@@ -3,9 +3,9 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from 'next/dynamic';
 import { FiX, FiCheck, FiChevronDown, FiChevronUp } from "react-icons/fi";
-import LandingNavbar from "../navbar/landingNavbar";
-import LoginModal from "../loginForm/loginModal";
-import SimulatorModal from "../loanSimulator/loanSimulatorModal";
+import LandingNavbar from "../../publicPage/navbar/landingNavbar";
+import LoginModal from "../../publicPage/loginForm/loginModal";
+import SimulatorModal from "../../publicPage/loanSimulator/loanSimulatorModal";
 import TermsGateModal from "@/app/commonComponents/modals/termsPrivacy/TermsGateModal";
 import TermsContentModal from "@/app/commonComponents/modals/termsPrivacy/TermsContentModal";
 import PrivacyContentModal from "@/app/commonComponents/modals/termsPrivacy/PrivacyContentModal";
@@ -93,14 +93,6 @@ export default function ApplicationPage() {
 
   return (
     <div className={isMobile ? "min-h-screen flex flex-col bg-white text-black" : "h-screen flex flex-col bg-white text-black"}>
-      <LandingNavbar 
-        language={language}
-        setLanguage={setLanguage}
-        isLoginOpen={isLoginOpen}
-        setIsLoginOpen={setIsLoginOpen}
-        isBlurred={showTermsModal || showTosContent || showPrivacyContent}
-        setIsCalculationOpen={setIsCalculationOpen}
-      />
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} language={language} />
       <SimulatorModal isOpen={isCalculationOpen} onClose={() => setIsCalculationOpen(false)} language={language} />
 

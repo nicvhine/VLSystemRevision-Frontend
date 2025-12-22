@@ -41,7 +41,6 @@ export default function BorrowerClient({ children }: BorrowerClientProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar role="borrower" />
 
       {showChangePasswordModal && (
         <ChangePasswordModal

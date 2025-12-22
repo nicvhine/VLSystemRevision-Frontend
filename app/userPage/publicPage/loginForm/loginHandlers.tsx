@@ -51,17 +51,18 @@ export async function loginHandler({
         ? localStorage.setItem("forcePasswordChange", "true")
         : localStorage.removeItem("forcePasswordChange");
 
-      // Send OTP via API
-      if (data.borrowersId) {
-        await fetch(`${BASE_URL}/borrowers/send-login-otp`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ borrowersId: data.borrowersId }),
-        });
-      }
+      // // Send OTP via API
+      // if (data.borrowersId) {
+      //   await fetch(`${BASE_URL}/borrowers/send-login-otp`, {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ borrowersId: data.borrowersId }),
+      //   });
+      // }
 
-      setOtpRole?.('borrower');
-      setShowSMSModal?.(true);
+      // setOtpRole?.('borrower');
+      // setShowSMSModal?.(true);
+      router.push(`/userPage/borrowerPage/dashboard`);
       return true;
     }
 
