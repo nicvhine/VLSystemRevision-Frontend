@@ -13,7 +13,8 @@ interface Props {
   setShowForgotModal: React.Dispatch<React.SetStateAction<boolean>>;
   setForgotRole: React.Dispatch<React.SetStateAction<'borrower' | 'staff' | '' | null>>;
   setShowSMSModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setOtpRole?: React.Dispatch<React.SetStateAction<'borrower' | 'staff'>>; 
+  setOtpRole?: React.Dispatch<React.SetStateAction<'borrower' | 'staff'>>;
+  setShowRegisterModal: React.Dispatch<React.SetStateAction<boolean>>; // ✅ REGISTER
   language?: 'en' | 'ceb';
 }
 
@@ -24,6 +25,7 @@ export default function LoginFormWithSMS({
   setForgotRole,
   setOtpRole,
   setShowSMSModal,
+  setShowRegisterModal,
   language = 'en',
 }: Props) {
   const [username, setUsername] = useState('');
@@ -80,29 +82,33 @@ export default function LoginFormWithSMS({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+
     if (isLockedOut) {
       setErrorMsg(`Too many failed attempts. Wait ${formatCooldownTime(cooldownTime)} before retry.`);
       setShowErrorModal(true);
       return;
     }
+
     if (!username || !password) {
       setErrorMsg(e.usernamePasswordRequired);
       setShowErrorModal(true);
       return;
     }
+
     if (isLoggingIn) return;
 
     setIsLoggingIn(true);
+
     try {
-      const result = await loginHandler({ 
-        username, 
-        password, 
-        onClose, 
-        setErrorMsg, 
-        setShowErrorModal, 
-        setShowSMSModal, 
-        setOtpRole,  
-        router 
+      const result = await loginHandler({
+        username,
+        password,
+        onClose,
+        setErrorMsg,
+        setShowErrorModal,
+        setShowSMSModal,
+        setOtpRole,
+        router,
       });
 
       if (result === false) {
@@ -110,7 +116,7 @@ export default function LoginFormWithSMS({
         setAttemptCount(newAttemptCount);
 
         if (newAttemptCount >= 3) {
-          const unlockTime = Date.now() + 30 * 1000; // replace with 5 * 60 * 1000 in prod
+          const unlockTime = Date.now() + 30 * 1000; // change to 5 * 60 * 1000 in prod
           localStorage.setItem('loginLockout', JSON.stringify({ unlockTime }));
           setIsLockedOut(true);
           setCooldownTime(30);
@@ -118,7 +124,9 @@ export default function LoginFormWithSMS({
           setShowErrorModal(true);
         } else {
           const remaining = 3 - newAttemptCount;
-          setErrorMsg(`Invalid credentials. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`);
+          setErrorMsg(
+            `Invalid credentials. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`
+          );
           setShowErrorModal(true);
         }
       } else {
@@ -134,88 +142,112 @@ export default function LoginFormWithSMS({
 
   return (
     <>
-      <ErrorModal isOpen={showErrorModal} message={errorMsg} onClose={() => setShowErrorModal(false)} />
-      
+      <ErrorModal
+        isOpen={showErrorModal}
+        message={errorMsg}
+        onClose={() => setShowErrorModal(false)}
+      />
+
       <div>
-        <div>
-          <h2 className="text-2xl font-semibold mb-1 text-center">{auth.welcomeBack}</h2>
-          <p className="mb-4 text-center text-gray-600">{auth.loginSubtitle}</p>
+        <h2 className="text-2xl font-semibold mb-1 text-center">{auth.welcomeBack}</h2>
+        <p className="mb-4 text-center text-gray-600">{auth.loginSubtitle}</p>
 
-          {attemptCount > 0 && !isLockedOut && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center justify-center gap-2 text-red-800">
-                <AlertTriangle className="w-4 h-4" />
-                <p className="text-sm font-medium">
-                  Warning: {remainingAttempts} attempt{remainingAttempts > 1 ? 's' : ''}
-                </p>
-              </div>
-              <p className="text-xs text-red-700 mt-1 text-center">
-                Account locks after {remainingAttempts} more failed attempt{remainingAttempts > 1 ? 's' : ''}.
+        {attemptCount > 0 && !isLockedOut && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center justify-center gap-2 text-red-800">
+              <AlertTriangle className="w-4 h-4" />
+              <p className="text-sm font-medium">
+                Warning: {remainingAttempts} attempt
+                {remainingAttempts > 1 ? 's' : ''}
               </p>
             </div>
-          )}
+            <p className="text-xs text-red-700 mt-1 text-center">
+              Account locks after {remainingAttempts} more failed attempt
+              {remainingAttempts > 1 ? 's' : ''}.
+            </p>
+          </div>
+        )}
 
-          {isLockedOut && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center justify-center gap-2 text-red-800">
-                <AlertTriangle className="w-4 h-4" />
-                <p className="text-sm font-medium">Account Temporarily Locked</p>
-              </div>
-              <p className="text-xs text-red-700 mt-1 text-center">
-                Wait {formatCooldownTime(cooldownTime)} before trying again.
-              </p>
+        {isLockedOut && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center justify-center gap-2 text-red-800">
+              <AlertTriangle className="w-4 h-4" />
+              <p className="text-sm font-medium">Account Temporarily Locked</p>
             </div>
-          )}
+            <p className="text-xs text-red-700 mt-1 text-center">
+              Wait {formatCooldownTime(cooldownTime)} before trying again.
+            </p>
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder={auth.username}
+            className="w-full px-4 py-2.5 mb-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            disabled={isLockedOut}
+          />
+
+          <div className="relative mb-4">
             <input
-              type="text"
-              placeholder={auth.username}
-              className="w-full px-4 py-2.5 mb-3 border border-gray-200 rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-red-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type={showPassword ? 'text' : 'password'}
+              placeholder={auth.password}
+              className="w-full px-4 py-2.5 pr-16 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               disabled={isLockedOut}
             />
-            <div className="relative mb-4">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder={auth.password}
-                className="w-full px-4 py-2.5 pr-16 border border-gray-200 rounded-lg focus:outline-none text-black focus:ring-2 focus:ring-red-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLockedOut}
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 text-xs disabled:opacity-50"
-                onClick={() => setShowPassword(!showPassword)}
-                disabled={isLockedOut}
-              >
-                {showPassword ? auth.hide : auth.show}
-              </button>
-            </div>
-
-            <p
-              className="text-sm text-blue-600 hover:underline cursor-pointer text-center mb-3"
-              onClick={() => {
-                setShowForgotModal(true);
-                setForgotRole('');
-              }}
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs"
+              onClick={() => setShowPassword(!showPassword)}
+              disabled={isLockedOut}
             >
-              {auth.forgotPrompt}
-            </p>
+              {showPassword ? auth.hide : auth.show}
+            </button>
+          </div>
 
-            <div className="flex justify-center">
-              <button
-                type="submit"
-                disabled={isLoggingIn || isLockedOut}
-                className="w-36 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-70 disabled:cursor-not-allowed"
+          <p
+            className="text-sm text-blue-600 hover:underline cursor-pointer text-center mb-3"
+            onClick={() => {
+              setShowForgotModal(true);
+              setForgotRole('');
+            }}
+          >
+            {auth.forgotPrompt}
+          </p>
+
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              disabled={isLoggingIn || isLockedOut}
+              className="w-36 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-70"
+            >
+              {isLoggingIn ? (
+                <ButtonContentLoading label={auth.loggingIn} />
+              ) : isLockedOut ? (
+                'Locked'
+              ) : (
+                auth.login
+              )}
+            </button>
+          </div>
+
+          {/* REGISTER LINK */}
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Don’t have an account?{' '}
+              <span
+                onClick={() => setShowRegisterModal(true)}
+                className="text-blue-600 hover:underline cursor-pointer font-medium"
               >
-                {isLoggingIn ? <ButtonContentLoading label={auth.loggingIn} /> : isLockedOut ? 'Locked' : auth.login}
-              </button>
-            </div>
-          </form>
-        </div>
+                Register
+              </span>
+            </p>
+          </div>
+        </form>
       </div>
     </>
   );
