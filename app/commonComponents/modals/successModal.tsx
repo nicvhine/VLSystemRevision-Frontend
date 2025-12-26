@@ -2,14 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { SuccessModalProps } from '../utils/Types/modal';
 import { createPortal } from 'react-dom';
 
-/**
- * Success modal component with fade animations and auto-close functionality
- * Displays success messages with green styling and checkmark icon
- * @param isOpen - Boolean to control modal visibility
- * @param message - Success message to display
- * @param onClose - Callback function to close the modal
- * @returns JSX element containing the success modal
- */
 const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, message, onClose }) => {
   // Modal state management
   const [visible, setVisible] = useState(false);

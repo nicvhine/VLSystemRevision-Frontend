@@ -44,6 +44,7 @@ export interface AgreementModalProps {
   isOpen: boolean;
   onClose: () => void;
   application: any | null;
+  onAccept?: () => void;
 }
 
 export interface AreYouStillThereModalProps {

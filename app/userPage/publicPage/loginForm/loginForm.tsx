@@ -5,7 +5,7 @@ import { loginHandler } from './loginHandlers';
 import ErrorModal from '@/app/commonComponents/modals/errorModal';
 import { ButtonContentLoading } from '@/app/commonComponents/utils/loading';
 import translationData from '@/app/commonComponents/translation';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Lock, User } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
@@ -14,7 +14,7 @@ interface Props {
   setForgotRole: React.Dispatch<React.SetStateAction<'borrower' | 'staff' | '' | null>>;
   setShowSMSModal: React.Dispatch<React.SetStateAction<boolean>>;
   setOtpRole?: React.Dispatch<React.SetStateAction<'borrower' | 'staff'>>;
-  setShowRegisterModal: React.Dispatch<React.SetStateAction<boolean>>; // ✅ REGISTER
+  setShowRegisterModal: React.Dispatch<React.SetStateAction<boolean>>;
   language?: 'en' | 'ceb';
 }
 
@@ -116,7 +116,7 @@ export default function LoginFormWithSMS({
         setAttemptCount(newAttemptCount);
 
         if (newAttemptCount >= 3) {
-          const unlockTime = Date.now() + 30 * 1000; // change to 5 * 60 * 1000 in prod
+          const unlockTime = Date.now() + 30 * 1000;
           localStorage.setItem('loginLockout', JSON.stringify({ unlockTime }));
           setIsLockedOut(true);
           setCooldownTime(30);
@@ -148,103 +148,151 @@ export default function LoginFormWithSMS({
         onClose={() => setShowErrorModal(false)}
       />
 
-      <div>
-        <h2 className="text-2xl font-semibold mb-1 text-center">{auth.welcomeBack}</h2>
-        <p className="mb-4 text-center text-gray-600">{auth.loginSubtitle}</p>
+      <div className="py-2">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">{auth.welcomeBack}</h2>
+          <p className="text-base text-gray-600">{auth.loginSubtitle}</p>
+        </div>
 
+        {/* Warning Banners */}
         {attemptCount > 0 && !isLockedOut && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center justify-center gap-2 text-red-800">
-              <AlertTriangle className="w-4 h-4" />
-              <p className="text-sm font-medium">
-                Warning: {remainingAttempts} attempt
-                {remainingAttempts > 1 ? 's' : ''}
-              </p>
+          <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-500 rounded-lg shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-800">
+                  Security Warning
+                </p>
+                <p className="text-xs text-red-700 mt-1">
+                  {remainingAttempts} attempt{remainingAttempts > 1 ? 's' : ''} remaining before account lockout
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-red-700 mt-1 text-center">
-              Account locks after {remainingAttempts} more failed attempt
-              {remainingAttempts > 1 ? 's' : ''}.
-            </p>
           </div>
         )}
 
         {isLockedOut && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center justify-center gap-2 text-red-800">
-              <AlertTriangle className="w-4 h-4" />
-              <p className="text-sm font-medium">Account Temporarily Locked</p>
+          <div className="mb-6 p-4 bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-600 rounded-lg shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <Lock className="w-5 h-5 text-red-700" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-900">Account Temporarily Locked</p>
+                <p className="text-xs text-red-800 mt-1">
+                  Please wait {formatCooldownTime(cooldownTime)} before trying again
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-red-700 mt-1 text-center">
-              Wait {formatCooldownTime(cooldownTime)} before trying again.
-            </p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder={auth.username}
-            className="w-full px-4 py-2.5 mb-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            disabled={isLockedOut}
-          />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Username Input */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {auth.username}
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <User className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Enter your username"
+                className="w-full pl-12 pr-4 py-3.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                disabled={isLockedOut}
+              />
+            </div>
+          </div>
 
-          <div className="relative mb-4">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder={auth.password}
-              className="w-full px-4 py-2.5 pr-16 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              disabled={isLockedOut}
-            />
+          {/* Password Input */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              {auth.password}
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Enter your password"
+                className="w-full pl-12 pr-14 py-3.5 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                disabled={isLockedOut}
+              />
+              <button
+                type="button"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLockedOut}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Forgot Password Link */}
+          <div className="flex justify-end">
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 text-xs"
-              onClick={() => setShowPassword(!showPassword)}
-              disabled={isLockedOut}
+              className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline transition-colors"
+              onClick={() => {
+                setShowForgotModal(true);
+                setForgotRole('');
+              }}
             >
-              {showPassword ? auth.hide : auth.show}
+              {auth.forgotPrompt}
             </button>
           </div>
 
-          <p
-            className="text-sm text-blue-600 hover:underline cursor-pointer text-center mb-3"
-            onClick={() => {
-              setShowForgotModal(true);
-              setForgotRole('');
-            }}
+          {/* Login Button */}
+          <button
+            type="submit"
+            disabled={isLoggingIn || isLockedOut}
+            className="w-full py-3.5 bg-gradient-to-r from-red-600 to-red-700 text-white text-base font-semibold rounded-xl hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
           >
-            {auth.forgotPrompt}
-          </p>
+            {isLoggingIn ? (
+              <ButtonContentLoading label={auth.loggingIn} />
+            ) : isLockedOut ? (
+              'Account Locked'
+            ) : (
+              auth.login
+            )}
+          </button>
 
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              disabled={isLoggingIn || isLockedOut}
-              className="w-36 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-70"
-            >
-              {isLoggingIn ? (
-                <ButtonContentLoading label={auth.loggingIn} />
-              ) : isLockedOut ? (
-                'Locked'
-              ) : (
-                auth.login
-              )}
-            </button>
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500 font-medium">or</span>
+            </div>
           </div>
 
-          {/* REGISTER LINK */}
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
-              Don’t have an account?{' '}
-              <span
+          {/* Register Link */}
+          <div className="text-center">
+            <p className="text-base text-gray-600">
+              Don't have an account?{' '}
+              <button
+                type="button"
                 onClick={() => setShowRegisterModal(true)}
-                className="text-blue-600 hover:underline cursor-pointer font-medium"
+                className="text-red-600 font-semibold hover:text-red-700 hover:underline transition-colors"
               >
-                Register
-              </span>
+                Create Account
+              </button>
             </p>
           </div>
         </form>

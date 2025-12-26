@@ -38,8 +38,6 @@ export const getLoanOfficerNavItems = (language: 'en' | 'ceb') => {
 export function getBorrowerNavItems(language: 'en' | 'ceb') {
   const t = navbarTranslation[language];
   return [
-    { name: t.tab11, href: '/userPage/borrowerPage/loanHistory'},
-    { name: t.tab12, href: '/userPage/borrowerPage/paymentHistory'},
   ];
 }
 

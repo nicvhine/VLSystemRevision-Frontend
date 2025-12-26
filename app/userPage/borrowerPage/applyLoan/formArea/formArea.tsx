@@ -14,6 +14,7 @@ import AgentDropdown from "./sections/agent";
 
 import { ErrorModal, DocumentUploadErrorModal } from "./modals/errorModal";
 import SuccessModalWithAnimation from "./modals/successModal";
+import AgreementModal from '@/app/commonComponents/modals/loanAgreement/regularLoan/modal';
 
 import { useUpdateMissingFields } from "./hooks/updateMissingFields";
 import { useFormSubmit } from "./hooks/useFormSubmit";
@@ -222,8 +223,11 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
     appBusinessLoc, appMonthlyIncome, appOccupation, appEmploymentStatus, appCompanyName, appReferences,
     requiresCollateral, collateralType, collateralValue, collateralDescription, ownershipStatus, appAgent,
     photo2x2, uploadedFiles, requiredDocumentsCount, missingFields, setMissingFields, setAgentMissingError,
-    API_URL, COMPANY_NAME, TERMS_VERSION, PRIVACY_VERSION, language
+    API_URL, COMPANY_NAME, TERMS_VERSION, PRIVACY_VERSION, language,
+    borrowersId
   });
+
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
 
   // Expose submission method to parent component
   useImperativeHandle(ref, () => ({
@@ -249,6 +253,22 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
   useEffect(() => {
     if (appAgent.trim()) setAgentMissingError(false);
   }, [appAgent]);
+
+  // Load current borrower id from localStorage (set by auth flow)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = localStorage.getItem("borrowersId");
+    if (id) setBorrowersId(id);
+
+    // Prefill name / email / phone from localStorage when available
+    const storedName = localStorage.getItem("fullName") || localStorage.getItem("name");
+    const storedEmail = localStorage.getItem("email");
+    const storedPhone = localStorage.getItem("phoneNumber") || localStorage.getItem("phone");
+
+    if (storedName && !appName) setAppName(storedName);
+    if (storedEmail && !appEmail) setAppEmail(storedEmail);
+    if (storedPhone && !appContact) setAppContact(storedPhone);
+  }, []);
 
   return (
     <div className="relative max-w-4xl mx-auto py-0">
@@ -384,7 +404,8 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
               setShowErrorModal(true);
               return;
             }
-            onShowTermsModal?.();
+            // show loan agreement modal instead of terms & policy
+            setShowAgreementModal(true);
           }}
           disabled={isSubmitting}
           className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -400,6 +421,38 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
           onClose={() => setShowSuccessModal(false)}
         />
       )}
+
+      {/* Agreement Modal shown before final submit */}
+      <AgreementModal
+        isOpen={showAgreementModal}
+        onClose={() => setShowAgreementModal(false)}
+        application={{
+          appName,
+          appAddress,
+          appLoanAmount: selectedLoan?.amount || (customLoanAmount || 0),
+          appInterestRate: selectedLoan?.interestRate || 0,
+          appLoanTerms: selectedLoan?.terms || selectedLoan?.loanTerm || null,
+          appTotalPayable: selectedLoan?.totalPayable || null,
+          dateDisbursed: null,
+        }}
+        onAccept={async () => {
+          setShowAgreementModal(false);
+          try {
+            const result = await performSubmit();
+            if (result.ok && result.data.application?.applicationId) {
+              setLoanId(result.data.application.applicationId);
+              setShowSuccessModal(true);
+              clearSavedData();
+            } else {
+              setErrorMessage(result.error?.message || "Submission failed");
+              setShowErrorModal(true);
+            }
+          } catch (err: any) {
+            setErrorMessage(err.message || "Submission failed");
+            setShowErrorModal(true);
+          }
+        }}
+      />
     </div>
   );
 });

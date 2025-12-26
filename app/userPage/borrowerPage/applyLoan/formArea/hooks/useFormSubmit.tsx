@@ -13,6 +13,7 @@ interface UseFormSubmitProps {
   appSpouseName: string;
   appSpouseOccupation: string;
   appAddress: string;
+  borrowersId?: string;
   appLoanPurpose: string;
   selectedLoan: any | null;
   sourceOfIncome: string;
@@ -126,6 +127,7 @@ export function useFormSubmit(props: UseFormSubmitProps) {
       setActiveStep(0); // Step 0: Preparing submission
 
       const formData = new FormData();
+      if (props.borrowersId) formData.append("borrowersId", props.borrowersId);
       formData.append("appName", props.appName);
       formData.append("appDob", props.appDob);
       formData.append("appContact", props.appContact);

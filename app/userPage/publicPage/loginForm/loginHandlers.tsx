@@ -13,6 +13,15 @@ interface LoginParams {
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
+// Role-based dashboard routing
+const staffDashboardRoutes: Record<string, string> = {
+  head: '/userPage/headPage/dashboard',
+  manager: '/userPage/managerPage/dashboard',
+  'loan officer': '/userPage/loanOfficerPage/dashboard',
+  collector: '/commonComponents/collection',
+  sysad: '/userPage/sysadPage/dashboard',
+};
+
 export async function loginHandler({
   username,
   password,
@@ -47,10 +56,7 @@ export async function loginHandler({
       data.borrowersId && localStorage.setItem("borrowersId", data.borrowersId);
       data.profilePic && localStorage.setItem("profilePic", data.profilePic);
       data.phoneNumber && localStorage.setItem("phoneNumber", data.phoneNumber);
-      data.isFirstLogin
-        ? localStorage.setItem("forcePasswordChange", "true")
-        : localStorage.removeItem("forcePasswordChange");
-
+    
       // // Send OTP via API
       // if (data.borrowersId) {
       //   await fetch(`${BASE_URL}/borrowers/send-login-otp`, {
@@ -83,65 +89,89 @@ export async function loginHandler({
       console.log("📧 Email:", user.email);
       console.log("👔 Role:", user.role);
       
-      // Store ALL user info with "pending" prefix (will be confirmed after OTP)
-      localStorage.setItem("pendingToken", staffData.token || "");
-      localStorage.setItem("pendingUserId", user.userId || "");
-      localStorage.setItem("pendingFullName", user.name || user.username || user.email || "");
-      localStorage.setItem("pendingPhoneNumber", user.phoneNumber || "");
-      localStorage.setItem("pendingEmail", user.email || "");
-      localStorage.setItem("pendingUsername", user.username || "");
-      localStorage.setItem("pendingRole", (user.role || "").toLowerCase());
+      // Store user info directly (OTP temporarily disabled)
+      localStorage.setItem("token", staffData.token || "");
+      localStorage.setItem("userId", user.userId || "");
+      localStorage.setItem("fullName", user.name || user.username || user.email || "");
+      localStorage.setItem("phoneNumber", user.phoneNumber || "");
+      localStorage.setItem("email", user.email || "");
+      localStorage.setItem("username", user.username || "");
+      localStorage.setItem("role", (user.role || "").toLowerCase());
       
       if (user.profilePic) {
-        localStorage.setItem("pendingProfilePic", user.profilePic);
+        localStorage.setItem("profilePic", user.profilePic);
       }
       
       if (user.isFirstLogin) {
-        localStorage.setItem("pendingForcePasswordChange", "true");
+        localStorage.setItem("forcePasswordChange", "true");
       }
+      
+      // // OTP flow temporarily disabled for staff
+      // // Store ALL user info with "pending" prefix (will be confirmed after OTP)
+      // localStorage.setItem("pendingToken", staffData.token || "");
+      // localStorage.setItem("pendingUserId", user.userId || "");
+      // localStorage.setItem("pendingFullName", user.name || user.username || user.email || "");
+      // localStorage.setItem("pendingPhoneNumber", user.phoneNumber || "");
+      // localStorage.setItem("pendingEmail", user.email || "");
+      // localStorage.setItem("pendingUsername", user.username || "");
+      // localStorage.setItem("pendingRole", (user.role || "").toLowerCase());
+      // 
+      // if (user.profilePic) {
+      //   localStorage.setItem("pendingProfilePic", user.profilePic);
+      // }
+      // 
+      // if (user.isFirstLogin) {
+      //   localStorage.setItem("pendingForcePasswordChange", "true");
+      // }
       
       // Debug: Verify data was stored
-      console.log("✅ Stored pending data:", {
-        pendingUserId: localStorage.getItem("pendingUserId"),
-        pendingEmail: localStorage.getItem("pendingEmail"),
-        pendingRole: localStorage.getItem("pendingRole"),
-        pendingFullName: localStorage.getItem("pendingFullName"),
-        pendingUsername: localStorage.getItem("pendingUsername"),
-        hasToken: !!localStorage.getItem("pendingToken")
+      console.log("✅ Stored staff data:", {
+        userId: localStorage.getItem("userId"),
+        email: localStorage.getItem("email"),
+        role: localStorage.getItem("role"),
+        fullName: localStorage.getItem("fullName"),
+        username: localStorage.getItem("username"),
+        hasToken: !!localStorage.getItem("token")
       });
     
-      // Backend generates OTP and stores it
-      const otpRes = await fetch(`${BASE_URL}/users/generate-login-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.userId }),
-      });
-    
-      const otpData = await otpRes.json();
-      console.log("🔐 OTP generation response:", { success: otpRes.ok });
+      // // OTP generation temporarily disabled
+      // const otpRes = await fetch(`${BASE_URL}/users/generate-login-otp`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ userId: user.userId }),
+      // });
+      // 
+      // const otpData = await otpRes.json();
+      // console.log("🔐 OTP generation response:", { success: otpRes.ok });
+      // 
+      // if (!otpRes.ok) {
+      //   throw new Error("Failed to generate OTP");
+      // }
+      // 
+      // // Send OTP via EmailJS
+      // const templateParams = {
+      //   to_email: user.email,
+      //   passcode: otpData.otp,
+      //   time: new Date(Date.now() + 5 * 60 * 1000).toLocaleTimeString(),
+      // };
+      // 
+      // await emailjs.send(
+      //   process.env.NEXT_PUBLIC_EMAILJS_VLSYSTEM_SERVICE_ID!,
+      //   process.env.NEXT_PUBLIC_EMAILJS_OTP_TEMPLATE_ID!,
+      //   templateParams,
+      //   process.env.NEXT_PUBLIC_EMAILJS_VLSYSTEM_PUBLIC_KEY!
+      // );
+      // 
+      // console.log("📧 OTP sent to:", user.email);
+      // 
+      // setOtpRole?.('staff');
+      // setShowSMSModal?.(true);
       
-      if (!otpRes.ok) {
-        throw new Error("Failed to generate OTP");
-      }
-    
-      // Send OTP via EmailJS
-      const templateParams = {
-        to_email: user.email,
-        passcode: otpData.otp,
-        time: new Date(Date.now() + 5 * 60 * 1000).toLocaleTimeString(),
-      };
-    
-      await emailjs.send(
-        process.env.NEXT_PUBLIC_EMAILJS_VLSYSTEM_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_OTP_TEMPLATE_ID!,
-        templateParams,
-        process.env.NEXT_PUBLIC_EMAILJS_VLSYSTEM_PUBLIC_KEY!
-      );
-    
-      console.log("📧 OTP sent to:", user.email);
-      
-      setOtpRole?.('staff');
-      setShowSMSModal?.(true);
+      // Redirect to role-based dashboard
+      const userRole = (user.role || "").toLowerCase();
+      const dashboardRoute = staffDashboardRoutes[userRole] || '/userPage/staffPage/dashboard';
+      console.log(`📍 Redirecting ${userRole} to:`, dashboardRoute);
+      router.push(dashboardRoute);
       return true;
     }
 

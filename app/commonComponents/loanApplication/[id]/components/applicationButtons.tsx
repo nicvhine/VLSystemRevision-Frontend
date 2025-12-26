@@ -196,31 +196,16 @@ const ApplicationButtons: React.FC<ApplicationButtonsProps> = ({
         <>
           <button
             onClick={() => {
-              setShowConfirm({ type: 'disburse' });
-              setPendingAction(() => () => handleDisburse(application, setApplications, authFetch, setIsAgreementOpen, showSuccess, showError));
+              try {
+                modalRef?.current?.openModal?.(application);
+              } catch (err) {
+                console.warn('Failed to open account modal on disburse click', err);
+              }
             }}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
           >
             {a.b4}
           </button>
-          <ConfirmModal
-            show={showConfirm.type === 'disburse'}
-            message={statusMessage("Disbursed")}
-            title={a.cm1}
-            confirmLabel={a.cm6}
-            cancelLabel={a.cm7}
-            processingLabel={a.cm5}
-            onConfirm={async () => {
-              setShowConfirm({ type: null });
-              try {
-                setIsActing(true);
-                await Promise.resolve(pendingAction());
-              } finally {
-                setIsActing(false);
-              }
-            }}
-            onCancel={() => setShowConfirm({ type: null })}
-          />
         </>
       )}
 
