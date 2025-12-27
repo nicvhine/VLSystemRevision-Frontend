@@ -1,6 +1,6 @@
 "use client";
 
-import { FiX } from "react-icons/fi";
+import { FiPrinter, FiX } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useState, useEffect } from "react";
 import { addMonthsSafe } from "./logic";
@@ -43,7 +43,6 @@ export default function AgreementModal({
   isOpen,
   onClose,
   application,
-  onAccept,
 }: AgreementModalProps) {
   const [showModal, setShowModal] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
@@ -71,6 +70,8 @@ export default function AgreementModal({
   }, [isOpen]);
 
   if (!showModal || !application) return null;
+
+  const handlePrint = () => setTimeout(() => window.print(), 100);
 
   const disburseDate = new Date(application.dateDisbursed);
 
@@ -119,24 +120,27 @@ export default function AgreementModal({
         }`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <div className="flex flex-col">
-            <h2 className="text-2xl font-bold text-gray-700">Loan Agreement</h2>
-            <p className="text-sm text-gray-500">Borrower: {capitalizeWords(application.appName)}</p>
-          </div>
-          <div className="flex gap-3 items-center">
+        <div className="flex justify-between items-center px-6 py-4 border-b no-print">
+          <h2 className="text-xl font-semibold text-gray-600">
+            Loan Agreement
+          </h2>
+          <div className="flex gap-3">
             {role !== "head" && (
               <button
-                onClick={() => onAccept?.()}
-                className="flex items-center bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                onClick={handlePrint}
+                className="flex items-center bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-800"
               >
-                Accept & Submit
+                <FiPrinter className="mr-2" /> Print
               </button>
             )}
-            <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
+            <button
+              onClick={onClose}
+              className="text-gray-600 hover:text-gray-800"
+            >
               <FiX size={20} />
             </button>
           </div>
+
         </div>
 
         {/* Scrollable content */}

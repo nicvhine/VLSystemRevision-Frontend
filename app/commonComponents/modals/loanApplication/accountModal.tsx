@@ -171,7 +171,7 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
   }, []);
 
 
-  const handleCreateAccount = async (isReloan: boolean = false) => {
+  const handleCreateAccount = async () => {
     if (!selectedApp) return;
 
     // Cross-check validations
@@ -189,7 +189,7 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
       return;
     }
 
-    if (!selectedCollectorId && !isReloan) {
+    if (!selectedCollectorId) {
       setErrorMessage(i.ma7);
       setErrorOpen(true);
       setTimeout(() => setErrorOpen(false), 5000);
@@ -201,121 +201,30 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
     try {
       setIsProcessing(true);
 
-      if (isReloan) {
-        if (!selectedApp.borrowersId) throw new Error("Borrower ID missing for reloan");
-
-        // 1. Deactivate old loans
-        const deactivateRes = await authFetch(`${BASE_URL}/loans/reloan/${selectedApp.applicationId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-        });
-        let deactivateErr: string | null = null;
-        if (!deactivateRes.ok) {
-          try {
-            const deactivateData = await deactivateRes.json();
-            deactivateErr = deactivateData?.error || null;
-          } catch {}
-          throw new Error(deactivateErr || "Failed to deactivate old loans");
-        }
-
-        // 2. Generate new loan
-        const loanResponse = await authFetch(
-          `${BASE_URL}/loans/generate-loan/${selectedApp.applicationId}`,
-          { method: "POST" }
-        );
-        if (!loanResponse.ok) {
-          let msg = "Failed to generate new loan";
-          try { const d = await loanResponse.json(); msg = d?.error || msg; } catch {}
-          throw new Error(msg);
-        }
-
-        // 3. Update borrower details based on the newest approved reloan
-        const updateBorrowerRes = await authFetch(
-          `${BASE_URL}/borrowers/${selectedApp.borrowersId}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: selectedApp.appName, 
-              email: selectedApp.appEmail, 
-              phoneNumber: selectedApp.appContact, 
-              profilePic: selectedApp.profilePic, 
-            }),
-          }
-        );
-        if (!updateBorrowerRes.ok) {
-          let msg = "Failed to update borrower details";
-          try { const d = await updateBorrowerRes.json(); msg = d?.error || msg; } catch {}
-          throw new Error(msg);
-        }
-
-        setSuccessMessage(i.ma13);
-      } else {
-        // Create borrower account
-        const borrowerRes = await authFetch(`${BASE_URL}/borrowers`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: selectedApp.appName,
-            role: "borrower",
-            applicationId: selectedApp.applicationId,
-            assignedCollector: selectedCollector?.name || "",
-            assignedCollectorId: selectedCollector?.userId || "",
-          }),
-        });
-        let borrowerData: any = null;
-        try { borrowerData = await borrowerRes.json(); } catch {}
-        if (!borrowerRes.ok) {
-          // Map common errors
-          const baseMsg = borrowerData?.error || "Failed to create borrower account";
-          const mapped =
-            borrowerRes.status === 409
-              ? "An account already exists for this borrower or application."
-              : borrowerRes.status === 400 || borrowerRes.status === 422
-              ? baseMsg
-              : baseMsg;
-          throw new Error(mapped);
-        }
-
-        // Set application status active
-        const appRes = await authFetch(`${BASE_URL}/loan-applications/${selectedApp.applicationId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Active" }),
-        });
-        if (!appRes.ok) {
-          let msg = "Failed to update application status";
-          try { const errData = await appRes.json(); msg = errData?.error || msg; } catch {}
-          throw new Error(msg);
-        }
-
-        // Generate new loan
-        const loanResponse = await authFetch(
-          `${BASE_URL}/loans/generate-loan/${selectedApp.applicationId}`,
-          { method: "POST" }
-        );
-        if (!loanResponse.ok) {
-          let msg = "Failed to generate loan";
-          try { const d = await loanResponse.json(); msg = d?.error || msg; } catch {}
-          throw new Error(msg);
-        }
-
-        console.log("Sending email to:", selectedApp.appEmail);
-        await sendEmail({
-          to_name: selectedApp.appName,
-          email: selectedApp.appEmail,
-          borrower_username: borrowerData.borrower.username,
-          borrower_password: borrowerData.tempPassword,
-          onError: (msg: string) => {
-            console.error("Email error callback:", msg);
-            setErrorMessage(msg);
-            setErrorOpen(true);
-            setTimeout(() => setErrorOpen(false), 5000);
-          },
-        });
-
-        setSuccessMessage(i.ma14);
+      // Set application status active
+      const appRes = await authFetch(`${BASE_URL}/loan-applications/${selectedApp.applicationId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Disbursed" }),
+      });
+      if (!appRes.ok) {
+        let msg = "Failed to update application status";
+        try { const errData = await appRes.json(); msg = errData?.error || msg; } catch {}
+        throw new Error(msg);
       }
+
+      // Generate new loan
+      const loanResponse = await authFetch(
+        `${BASE_URL}/loans/generate-loan/${selectedApp.applicationId}`,
+        { method: "POST" }
+      );
+      if (!loanResponse.ok) {
+        let msg = "Failed to generate loan";
+        try { const d = await loanResponse.json(); msg = d?.error || msg; } catch {}
+        throw new Error(msg);
+      }
+
+      setSuccessMessage(i.ma14);
 
       setSuccessOpen(true);
       
@@ -398,34 +307,30 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
             </div>
           </div>
 
-          {!selectedApp?.borrowersId && (
-            <>
-              <label className="block text-sm font-medium text-black mb-2">{i.ma3}</label>
-              <div className="relative">
-                <select
-                  value={selectedCollectorId}
-                  onChange={(e) => setSelectedCollectorId(e.target.value)}
-                  disabled={isFetchingCollectors || isProcessing}
-                  className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 text-black disabled:bg-gray-100 disabled:text-gray-500"
-                  aria-invalid={!selectedCollectorId}
-                >
-                  <option value="">
-                    {isFetchingCollectors ? i.ma4 : i.ma5}
-                  </option>
-                  {collectors.map((c) => (
-                    <option key={c.userId} value={c.userId}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+          <label className="block text-sm font-medium text-black mb-2">{i.ma3}</label>
+          <div className="relative">
+            <select
+              value={selectedCollectorId}
+              onChange={(e) => setSelectedCollectorId(e.target.value)}
+              disabled={isFetchingCollectors || isProcessing}
+              className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 text-black disabled:bg-gray-100 disabled:text-gray-500"
+              aria-invalid={!selectedCollectorId}
+            >
+              <option value="">
+                {isFetchingCollectors ? i.ma4 : i.ma5}
+              </option>
+              {collectors.map((c) => (
+                <option key={c.userId} value={c.userId}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
 
-                {isFetchingCollectors && <span className="absolute right-2 top-1/2 -translate-y-1/2"><LoadingSpinner size={4} /></span>}
-                {collectorsError && !isFetchingCollectors && (
-                  <p className="text-xs text-red-600 mt-2" role="alert">{collectorsError}</p>
-                )}
-              </div>
-            </>
-          )}
+            {isFetchingCollectors && <span className="absolute right-2 top-1/2 -translate-y-1/2"><LoadingSpinner size={4} /></span>}
+            {collectorsError && !isFetchingCollectors && (
+              <p className="text-xs text-red-600 mt-2" role="alert">{collectorsError}</p>
+            )}
+          </div>
 
           <div className="flex justify-end gap-3 mt-6">
             <button
@@ -436,36 +341,24 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
               {i.cm7}
             </button>
 
-            {!selectedApp?.borrowersId && (
-              <button
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed"
-                onClick={() => handleCreateAccount(false)}
-                disabled={
-                  isProcessing ||
-                  !!nameError ||
-                  !!emailError ||
-                  !selectedCollectorId
-                }
-                aria-disabled={
-                  isProcessing ||
-                  !!nameError ||
-                  !!emailError ||
-                  !selectedCollectorId
-                }
-              >
-                {isProcessing ? <ButtonContentLoading label={i.ma11} /> : i.b7}
-              </button>
-            )}
-
-            {selectedApp?.borrowersId && (
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
-                onClick={() => handleCreateAccount(true)}
-                disabled={isProcessing || !!nameError || !!emailError}
-              >
-                {isProcessing ? <ButtonContentLoading label={i.ma11} /> : i.ma9}
-              </button>
-            )}
+            <button
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed"
+              onClick={() => handleCreateAccount()}
+              disabled={
+                isProcessing ||
+                !!nameError ||
+                !!emailError ||
+                !selectedCollectorId
+              }
+              aria-disabled={
+                isProcessing ||
+                !!nameError ||
+                !!emailError ||
+                !selectedCollectorId
+              }
+            >
+              {isProcessing ? <ButtonContentLoading label={i.ma11} /> : i.b7}
+            </button>
           </div>
         </div>
       </div>
