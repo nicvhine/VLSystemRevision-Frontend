@@ -1,6 +1,6 @@
 "use client";
 
-import { FiPrinter, FiX } from "react-icons/fi";
+import { FiX } from "react-icons/fi";
 import { createPortal } from "react-dom";
 import { useState, useEffect } from "react";
 import { addMonthsSafe } from "./logic";
@@ -43,18 +43,11 @@ export default function AgreementModal({
   isOpen,
   onClose,
   application,
-}: AgreementModalProps) {
+  onAccept,
+}: AgreementModalProps & { onAccept?: () => void }) {
   const [showModal, setShowModal] = useState(false);
   const [animateIn, setAnimateIn] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
-
-  // Read role from storage for print button visibility
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedRole = localStorage.getItem("role");
-      setRole(storedRole);
-    }
-  }, []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Animation timing on open/close
   useEffect(() => {
@@ -70,8 +63,6 @@ export default function AgreementModal({
   }, [isOpen]);
 
   if (!showModal || !application) return null;
-
-  const handlePrint = () => setTimeout(() => window.print(), 100);
 
   const disburseDate = new Date(application.dateDisbursed);
 
@@ -125,14 +116,13 @@ export default function AgreementModal({
             Loan Agreement
           </h2>
           <div className="flex gap-3">
-            {role !== "head" && (
-              <button
-                onClick={handlePrint}
-                className="flex items-center bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-800"
-              >
-                <FiPrinter className="mr-2" /> Print
-              </button>
-            )}
+            <button
+              onClick={onAccept}
+              disabled={isSubmitting}
+              className="flex items-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              {isSubmitting ? "Submitting..." : "Accept & Submit"}
+            </button>
             <button
               onClick={onClose}
               className="text-gray-600 hover:text-gray-800"

@@ -270,6 +270,72 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
     if (storedPhone && !appContact) setAppContact(storedPhone);
   }, []);
 
+  // Fetch and prefill from previous application
+  useEffect(() => {
+    const prefillFromPreviousApplication = async () => {
+      try {
+        if (!borrowersId) return;
+        
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${BASE_URL}/borrowers/${borrowersId}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        const prevApp = data.latestApplication;
+        
+        if (!prevApp) return;
+        
+        // Prefill basic information
+        if (prevApp.appName && !appName) setAppName(prevApp.appName);
+        if (prevApp.appDob && !appDob) setAppDob(prevApp.appDob);
+        if (prevApp.appContact && !appContact) setAppContact(prevApp.appContact);
+        if (prevApp.appEmail && !appEmail) setAppEmail(prevApp.appEmail);
+        if (prevApp.appMarital && !appMarital) setAppMarital(prevApp.appMarital);
+        if (prevApp.appChildren && appChildren === 0) setAppChildren(prevApp.appChildren);
+        if (prevApp.appSpouseName && !appSpouseName) setAppSpouseName(prevApp.appSpouseName);
+        if (prevApp.appSpouseOccupation && !appSpouseOccupation) setAppSpouseOccupation(prevApp.appSpouseOccupation);
+        if (prevApp.appAddress && !appAddress) setAppAddress(prevApp.appAddress);
+        
+        // Prefill source of income
+        if (prevApp.sourceOfIncome && !sourceOfIncome) setSourceOfIncome(prevApp.sourceOfIncome);
+        if (prevApp.appTypeBusiness && !appTypeBusiness) setAppTypeBusiness(prevApp.appTypeBusiness);
+        if (prevApp.appBusinessName && !appBusinessName) setAppBusinessName(prevApp.appBusinessName);
+        if (prevApp.appDateStarted && !appDateStarted) setAppDateStarted(prevApp.appDateStarted);
+        if (prevApp.appBusinessLoc && !appBusinessLoc) setAppBusinessLoc(prevApp.appBusinessLoc);
+        if (prevApp.appMonthlyIncome && appMonthlyIncome === 0) setAppMonthlyIncome(prevApp.appMonthlyIncome);
+        if (prevApp.appOccupation && !appOccupation) setAppOccupation(prevApp.appOccupation);
+        if (prevApp.appEmploymentStatus && !appEmploymentStatus) setAppEmploymentStatus(prevApp.appEmploymentStatus);
+        if (prevApp.appCompanyName && !appCompanyName) setAppCompanyName(prevApp.appCompanyName);
+        
+        // Prefill references
+        if (prevApp.appReferences && Array.isArray(prevApp.appReferences) && appReferences[0].name === "") {
+          setAppReferences(prevApp.appReferences);
+        }
+        
+        // Prefill collateral information
+        if (requiresCollateral) {
+          if (prevApp.collateralType && !collateralType) setCollateralType(prevApp.collateralType);
+          if (prevApp.collateralValue && collateralValue === 0) setCollateralValue(prevApp.collateralValue);
+          if (prevApp.collateralDescription && !collateralDescription) setCollateralDescription(prevApp.collateralDescription);
+          if (prevApp.ownershipStatus && !ownershipStatus) setOwnershipStatus(prevApp.ownershipStatus);
+        }
+        
+        // Prefill loan purpose
+        if (prevApp.appLoanPurpose && !appLoanPurpose) setAppLoanPurpose(prevApp.appLoanPurpose);
+        
+      } catch (err) {
+        console.error("Error prefilling from previous application:", err);
+      }
+    };
+    
+    prefillFromPreviousApplication();
+  }, [borrowersId]);
+
   return (
     <div className="relative max-w-4xl mx-auto py-0">
       {/* Progress Modal */}

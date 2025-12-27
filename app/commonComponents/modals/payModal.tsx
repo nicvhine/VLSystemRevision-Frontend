@@ -31,6 +31,7 @@ export default function CustomAmountModal({
 
   // Safety check for activeLoan
   const loanBalance = activeLoan?.remainingBalance || activeLoan?.balance || 0;
+  const suggestedAmount = Number(collection.periodBalance).toFixed(2);
 
   useEffect(() => {
     const t = setTimeout(() => setAnimateIn(true), 10);
@@ -141,7 +142,18 @@ export default function CustomAmountModal({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Enter Payment Amount</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Enter Payment Amount</label>
+                <button
+                  onClick={() => {
+                    setCustomAmount(suggestedAmount);
+                    setAmountError('');
+                  }}
+                  className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline transition"
+                >
+                  Use Suggested (₱{suggestedAmount})
+                </button>
+              </div>
               <input
                 id="customAmountInput"
                 type="text"
@@ -172,7 +184,7 @@ export default function CustomAmountModal({
                 className={`w-full border rounded-lg px-3 py-2 text-black focus:ring-2 focus:ring-red-500 transition ${
                   amountError ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="0.00"
+                placeholder={`0.00 (or ₱${suggestedAmount} for full installment)`}
               />
               {amountError && <p className="text-red-500 text-xs mt-1.5">{amountError}</p>}
             </div>
