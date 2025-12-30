@@ -344,6 +344,9 @@ export default function BasicInformation({
               <option value="">{language === "en" ? "Select Status" : "Pilia ang Kahimtang"}</option>
               <option value="Single">{language === "en" ? "Single" : "Walay Bana/Asawa"}</option>
               <option value="Married">{language === "en" ? "Married" : "Minyo"}</option>
+              <option value="Widowed">{language === "en" ? "Widowed" : "Balo"}</option>
+              <option value="Divorced">{language === "en" ? "Divorced" : "Hiwalay"}</option>
+              <option value="Separated">{language === "en" ? "Separated" : "Nagkahiwalay"}</option>
             </select>
           </div>
           <div>
@@ -370,7 +373,7 @@ export default function BasicInformation({
         </div>
 
         {/* Spouse Fields */}
-        {appMarital === "Married" && (
+        {appMarital !== "Single" && (
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div>
               <label className="block font-medium mb-2 text-gray-700">

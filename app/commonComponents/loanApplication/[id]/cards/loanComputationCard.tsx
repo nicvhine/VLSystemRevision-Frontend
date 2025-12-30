@@ -43,15 +43,15 @@ export default function LoanComputationCard({ application, t, l }: LoanComputati
     setLoading(true);
     try {
       const res = await fetch(
-        `${BASE_URL}/loan-applications/${loanApp.applicationId}/principal`,
+        `${BASE_URL}/loan-applications/${loanApp.applicationId}/endorse-principal`,
         {
-          method: "PUT",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newPrincipal: newAmount }),
+          body: JSON.stringify({ requestedPrincipal: newAmount }),
         }
       );
 
-      if (!res.ok) throw new Error("Failed to update principal");
+      if (!res.ok) throw new Error("Failed to submit principal change request");
 
       const data = await res.json();
 
@@ -72,7 +72,7 @@ export default function LoanComputationCard({ application, t, l }: LoanComputati
       setIsEditOpen(false);
     } catch (err) {
       console.error(err);
-      alert("Error updating principal");
+      alert("Error submitting principal change request");
     } finally {
       setLoading(false);
     }

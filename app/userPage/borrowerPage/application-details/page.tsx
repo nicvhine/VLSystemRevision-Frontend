@@ -27,6 +27,59 @@ export default function ApplicationDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [approvingPrincipal, setApprovingPrincipal] = useState(false);
+
+  const handleApprovePrincipalChange = async () => {
+    if (!applicationId) return;
+    setApprovingPrincipal(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${BASE_URL}/loan-applications/${applicationId}/approve-principal-change`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to approve principal change');
+
+      const data = await res.json();
+      setApplication(data.updatedApp);
+      alert('Principal change approved successfully!');
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error approving principal change');
+    } finally {
+      setApprovingPrincipal(false);
+    }
+  };
+
+  const handleRejectPrincipalChange = async () => {
+    if (!applicationId) return;
+    setApprovingPrincipal(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${BASE_URL}/loan-applications/${applicationId}/reject-principal-change`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (!res.ok) throw new Error('Failed to reject principal change');
+
+      const data = await res.json();
+      setApplication(data.updatedApp);
+      alert('Principal change rejected');
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error rejecting principal change');
+    } finally {
+      setApprovingPrincipal(false);
+    }
+  };
 
   useEffect(() => {
     const fetchApplicationDetails = async () => {
@@ -136,6 +189,24 @@ export default function ApplicationDetailsPage() {
             </div>
           </div>
 
+          {/* Edit Details Button - Only for Applied Status */}
+          {application.status === 'Applied' && (
+            <div className="bg-blue-50 rounded-2xl p-6 border-2 border-blue-300 animate-in fade-in slide-in-from-top-4 duration-500 delay-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-blue-900 mb-1">Edit Application Details</h3>
+                  <p className="text-sm text-blue-700">You can still edit your application details while it's in Applied status.</p>
+                </div>
+                <button
+                  onClick={() => router.push(`/userPage/borrowerPage/applyLoan?id=${application.applicationId}`)}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all shadow-md hover:shadow-lg whitespace-nowrap ml-4"
+                >
+                  Edit Details
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Denial Reason Card */}
           {application.status === 'Denied' && application.denialReason && (
             <div className="bg-red-50 rounded-2xl p-6 border-2 border-red-300 animate-in fade-in slide-in-from-top-4 duration-500 delay-100">
@@ -146,6 +217,64 @@ export default function ApplicationDetailsPage() {
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-red-900 mb-2">Reason for Denial</h3>
                   <p className="text-red-800 leading-relaxed">{safeDisplay(application.denialReason)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pending Principal Change Card */}
+          {application.pendingPrincipalChange && (
+            <div className="bg-amber-50 rounded-2xl p-6 border-2 border-amber-300 animate-in fade-in slide-in-from-top-4 duration-500 delay-100">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-full bg-amber-100 flex-shrink-0">
+                  <Clock className="w-6 h-6 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-amber-900 mb-4">Pending Principal Change Request</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <p className="text-xs font-semibold text-amber-800 uppercase mb-1">Current Principal</p>
+                      <p className="text-sm font-bold text-amber-900">{formatCurrency(application.appLoanAmount ?? 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-amber-800 uppercase mb-1">Requested Principal</p>
+                      <p className="text-sm font-bold text-amber-900">{formatCurrency(application.requestedPrincipal ?? 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-amber-800 uppercase mb-1">Requested By</p>
+                      <p className="text-sm font-semibold text-amber-900">{safeDisplay(application.principalChangeRequestedByName)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-amber-800 uppercase mb-1">Requested On</p>
+                      <p className="text-sm font-semibold text-amber-900">
+                        {application.principalChangeRequestedAt ? formatDate(application.principalChangeRequestedAt) : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  {application.status === 'Pending' && (
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleApprovePrincipalChange}
+                        disabled={approvingPrincipal}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {approvingPrincipal ? 'Processing...' : 'Approve'}
+                      </button>
+                      <button
+                        onClick={handleRejectPrincipalChange}
+                        disabled={approvingPrincipal}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {approvingPrincipal ? 'Processing...' : 'Reject'}
+                      </button>
+                    </div>
+                  )}
+                  {application.status !== 'Pending' && (
+                    <p className="text-xs text-amber-700 italic">⏳ You can approve this request once the application is in Pending status</p>
+                  )}
+                  {application.status === 'Pending' && (
+                    <p className="text-xs text-amber-700 mt-4 italic">⏳ Awaiting your approval</p>
+                  )}
                 </div>
               </div>
             </div>

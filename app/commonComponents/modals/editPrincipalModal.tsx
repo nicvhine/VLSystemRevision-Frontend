@@ -196,29 +196,29 @@ export default function EditPrincipalModal({
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${BASE_URL}/loan-applications/${applicationId}/principal`, {
-        method: "PUT",
+      const res = await fetch(`${BASE_URL}/loan-applications/${applicationId}/endorse-principal`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ newPrincipal: amount }),
+        body: JSON.stringify({ requestedPrincipal: amount }),
       });
 
-      if (!res.ok) throw new Error("Failed to update principal");
+      if (!res.ok) throw new Error("Failed to submit principal change request");
 
       const data = await res.json();
       onSave(Number(data.updatedApp.appLoanAmount));
       if (showSuccess) {
-        showSuccess("Principal amount updated successfully!");
+        showSuccess("Principal change request submitted for approval!");
       }
       handleModalClose();
     } catch (err) {
       console.error(err);
       if (showError) {
-        showError("Error updating principal. Please try again.");
+        showError("Error submitting principal change request. Please try again.");
       } else {
-        alert("Error updating principal");
+        alert("Error submitting principal change request");
       }
     }
   };
@@ -248,7 +248,7 @@ export default function EditPrincipalModal({
           <FiX size={20} />
         </button>
 
-        <h2 className="text-xl font-semibold mb-4 text-gray-900">Edit Principal</h2>
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">Request Principal Change</h2>
 
         {/* Input Field */}
         <div className="mb-4">
@@ -365,7 +365,7 @@ export default function EditPrincipalModal({
             }`}
             disabled={loading}
           >
-            {loading ? "Saving..." : "Save"}
+            {loading ? "Submitting..." : "Submit for Approval"}
           </button>
         </div>
       </div>
