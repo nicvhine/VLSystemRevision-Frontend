@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useProfileDropdownLogic } from './dropdownLogic';
-import ProfileSettingsPanel from './profileEditing';
 import { useState, useEffect, useRef } from 'react';
 import translations from '../translation';
 import { useProfilePicUpload } from './hooks/useProfilePicUpload';
@@ -50,6 +50,7 @@ interface ProfileDropdownProps {
 }
 
 export default function ProfileDropdown(props: ProfileDropdownProps) {
+  const router = useRouter();
   const {
     name,
     email,
@@ -88,50 +89,7 @@ export default function ProfileDropdown(props: ProfileDropdownProps) {
 
   // Dropdown logic hook
   const {
-    editingEmail,
-    setEditingEmail,
-    editingPhone,
-    setEditingPhone,
-    isEditingEmailField,
-    setIsEditingEmailField,
-    isEditingPhoneField,
-    setIsEditingPhoneField,
-    isEditingPasswordField,
-    setIsEditingPasswordField,
-    currentPassword,
-    setCurrentPassword,
-    newPassword,
-    setNewPassword,
-    confirmPassword,
-    setConfirmPassword,
-    notificationPreferences,
-    passwordError,
-    setPasswordError,
-    phoneError,
-    emailError,
-    setEmailError,
-    setPhoneError,
-    settingsSuccess,
-    setSettingsSuccess,
-    activeSettingsTab,
-    setActiveSettingsTab,
-    toggleEdit,
-    handleNotificationToggle,
-    handleAccountSettingsUpdate,
     handleLogout,
-    enteredEmailCode,
-    setEnteredEmailCode,
-    enteredSmsCode,
-    setEnteredSmsCode,
-    sendEmailCode,
-    smsVerificationSent,
-    setSmsVerificationSent,
-    sendSmsCode,    
-    verifySmsCode,
-    emailVerified,
-    emailVerificationSent,
-    setEmailVerificationSent,
-    verifyEmailCode,
   } = useProfileDropdownLogic(setIsEditing, setShowOtpModal);
 
   // Initialize language from localStorage
@@ -370,70 +328,13 @@ export default function ProfileDropdown(props: ProfileDropdownProps) {
         <div className="flex flex-col gap-0.5 px-6 pb-2">
           <button
             className="flex items-center w-full px-2 py-3 font-medium text-left hover:bg-gray-100 hover:text-black transition rounded-lg"
-            onClick={toggleEdit}
+            onClick={() => {
+              setIsDropdownOpen(false);
+              router.push('/userPage/borrowerPage/account-settings');
+            }}
           >
             <span>{t.t4}</span>
           </button>
-
-          <div
-            className={`transition-all duration-300 overflow-hidden bg-gray-50 rounded-lg ${
-              isEditing ? 'max-h-[60vh] opacity-100 mt-2' : 'max-h-0 opacity-0 mt-0 pointer-events-none'
-            }`}
-            style={{
-              transitionProperty: 'max-height, opacity, margin-top',
-              overflowY: isEditing ? 'auto' : 'hidden',
-            }}
-          >
-            <div className="pt-3 pb-0 px-4">
-              <div className="mb-2 flex justify-center items-center pt-2">
-                <p className="text-xs text-gray-500 m-0 w-full">{t.t5}</p>
-              </div>
-              <div className="h-px w-full bg-gray-100 mb-1" />
-              <ProfileSettingsPanel
-                username={username}
-                email={displayEmail}
-                phoneNumber={displayPhoneNumber}
-                editingEmail={editingEmail}
-                setEditingEmail={setEditingEmail}
-                isEditingEmailField={isEditingEmailField}
-                setIsEditingEmailField={setIsEditingEmailField}
-                editingPhone={editingPhone}
-                setEditingPhone={setEditingPhone}
-                isEditingPhoneField={isEditingPhoneField}
-                setIsEditingPhoneField={setIsEditingPhoneField}
-                isEditingPasswordField={isEditingPasswordField}
-                setIsEditingPasswordField={setIsEditingPasswordField}
-                currentPassword={currentPassword}
-                setCurrentPassword={setCurrentPassword}
-                newPassword={newPassword}
-                setNewPassword={setNewPassword}
-                confirmPassword={confirmPassword}
-                setConfirmPassword={setConfirmPassword}
-                passwordError={passwordError}
-                setPasswordError={setPasswordError}
-                phoneError={phoneError}
-                setPhoneError={setPhoneError}
-                emailError={emailError}
-                setEmailError={setEmailError}
-                settingsSuccess={settingsSuccess}
-                setSettingsSuccess={setSettingsSuccess}
-                handleAccountSettingsUpdate={handleAccountSettingsUpdate}
-                emailVerificationSent={emailVerificationSent}
-                enteredEmailCode={enteredEmailCode}
-                setEnteredEmailCode={setEnteredEmailCode}
-                enteredSmsCode={enteredSmsCode}
-                setEnteredSmsCode={setEnteredSmsCode}
-                sendEmailCode={sendEmailCode}
-                verifyEmailCode={verifyEmailCode}
-                smsVerificationSent={smsVerificationSent}
-                sendSmsCode={sendSmsCode}
-                verifySmsCode={verifySmsCode}
-                setEmailVerificationSent={setEmailVerificationSent}  
-                emailVerified={emailVerified}      
-                setSmsVerificationSent={setSmsVerificationSent}                     
-              />
-            </div>
-          </div>
 
           <button
             className="flex items-center w-full px-2 py-3 text-red-600 hover:bg-gray-100 transition rounded-lg"

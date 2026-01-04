@@ -68,6 +68,9 @@ export default function ApplicationDetailsPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [withdrawalConfirmModal, setWithdrawalConfirmModal] = useState<{ show: boolean; action: 'approve' | 'deny' | null; reason: string }>({ show: false, action: null, reason: '' });
+  const [isProcessingWithdrawal, setIsProcessingWithdrawal] = useState(false);
+  const [expandWithdrawal, setExpandWithdrawal] = useState(false);
 
   const notFoundText = language === 'ceb' ? 'Wala nakit-an ang aplikasyon' : 'Application not found';
 
@@ -205,9 +208,10 @@ export default function ApplicationDetailsPage() {
         errors.push("Contact number must start with 09 and be exactly 11 digits");
       }
 
-      // Validate email (Gmail only)
-      if (profileData.appEmail && !profileData.appEmail.toLowerCase().endsWith("@gmail.com")) {
-        errors.push("Only Gmail addresses are accepted");
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (profileData.appEmail && !emailRegex.test(profileData.appEmail)) {
+        errors.push("Please enter a valid email address");
       }
 
       // Validate spouse name if married
@@ -360,6 +364,53 @@ export default function ApplicationDetailsPage() {
 
         {/* MAIN CONTENT */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Pending Withdrawal Request Card */}
+          {application?.pendingWithdrawalRequest && (
+          <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg shadow-sm overflow-hidden">
+            <button
+              onClick={() => setExpandWithdrawal(!expandWithdrawal)}
+              className="w-full p-5 flex items-center justify-between hover:bg-orange-100/50 transition-colors"
+            >
+              <div className="flex items-center gap-3 text-left flex-1">
+                <div className="p-2 rounded-full bg-orange-100 flex-shrink-0">
+                  <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-bold text-orange-900">Withdrawal Request Pending</h3>
+              </div>
+              <svg className={`w-5 h-5 text-orange-600 transition-transform flex-shrink-0 ${expandWithdrawal ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            {expandWithdrawal && (
+              <div className="px-5 pb-5 border-t border-orange-200 bg-white">
+                <p className="text-xs text-orange-800 mb-4 pt-3"><strong>Reason:</strong> {application?.withdrawalReason}</p>
+                
+                {role === 'loan_officer' || role === 'loan officer' || role === 'manager' ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setWithdrawalConfirmModal({ show: true, action: 'approve', reason: '' })}
+                      className="px-3 py-1.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-xs"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => setWithdrawalConfirmModal({ show: true, action: 'deny', reason: '' })}
+                      className="px-3 py-1.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-xs"
+                    >
+                      Deny
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-orange-700 italic">Awaiting loan officer approval</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1 flex flex-col h-full">
               <ProfileCard 
@@ -462,6 +513,111 @@ export default function ApplicationDetailsPage() {
           onCancel={() => setShowSaveConfirm(false)}
           loading={isSaving}
         />
+
+        {/* Withdrawal Confirmation Modal */}
+        {withdrawalConfirmModal.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                {withdrawalConfirmModal.action === 'approve' 
+                  ? 'Approve Withdrawal Request' 
+                  : 'Deny Withdrawal Request'}
+              </h3>
+              
+              {withdrawalConfirmModal.action === 'deny' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Denial Reason <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={withdrawalConfirmModal.reason}
+                    onChange={(e) => setWithdrawalConfirmModal(prev => ({ ...prev, reason: e.target.value }))}
+                    placeholder="Enter reason for denial..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={4}
+                  />
+                </div>
+              )}
+
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  <strong>Applicant's Reason:</strong>
+                </p>
+                <p className="text-sm text-gray-700 mt-1 italic">{application?.withdrawalReason}</p>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6">
+                {withdrawalConfirmModal.action === 'approve' 
+                  ? 'This will mark the application status as "Withdrawn".' 
+                  : 'This will deny the withdrawal request and return the application to "Applied" status.'}
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setWithdrawalConfirmModal({ show: false, action: null, reason: '' })}
+                  disabled={isProcessingWithdrawal}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (withdrawalConfirmModal.action === 'deny' && !withdrawalConfirmModal.reason.trim()) {
+                      showError('Please enter a denial reason');
+                      return;
+                    }
+                    
+                    setIsProcessingWithdrawal(true);
+                    try {
+                      const endpoint = withdrawalConfirmModal.action === 'approve' 
+                        ? 'approve-withdrawal' 
+                        : 'deny-withdrawal';
+                      
+                      const res = await authFetch(
+                        `${BASE_URL}/loan-applications/${application?.applicationId}/${endpoint}`,
+                        {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: withdrawalConfirmModal.action === 'deny' 
+                            ? JSON.stringify({ denialReason: withdrawalConfirmModal.reason })
+                            : '{}',
+                        }
+                      );
+                      
+                      if (!res.ok) throw new Error('Failed to process withdrawal request');
+                      
+                      const updated = await res.json();
+                      setApplications((prev: any) =>
+                        prev.map((app: any) =>
+                          app.applicationId === updated.applicationId ? updated : app
+                        )
+                      );
+                      
+                      setWithdrawalConfirmModal({ show: false, action: null, reason: '' });
+                      showSuccess(
+                        withdrawalConfirmModal.action === 'approve' 
+                          ? 'Withdrawal approved successfully!' 
+                          : 'Withdrawal denied successfully!'
+                      );
+                    } catch (err: any) {
+                      showError(err.message || 'Error processing withdrawal request');
+                    } finally {
+                      setIsProcessingWithdrawal(false);
+                    }
+                  }}
+                  disabled={isProcessingWithdrawal || (withdrawalConfirmModal.action === 'deny' && !withdrawalConfirmModal.reason.trim())}
+                  className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-all ${
+                    withdrawalConfirmModal.action === 'approve' 
+                      ? 'bg-red-600 hover:bg-red-700' 
+                      : 'bg-red-600 hover:bg-red-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isProcessingWithdrawal ? 'Processing...' : (withdrawalConfirmModal.action === 'approve' ? 'Approve' : 'Deny')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Wrapper>
   );

@@ -45,6 +45,8 @@ interface UseFormSubmitProps {
   language: 'en' | 'ceb';
   onSuccess?: (loanId: string) => void;
   onError?: (errorMessage: string) => void;
+  reloanData?: any | null;
+  remainingBalanceOption?: 'add-to-principal' | 'deduct-from-receivable' | null;
 }
 
 export function useFormSubmit(props: UseFormSubmitProps) {
@@ -152,9 +154,17 @@ export function useFormSubmit(props: UseFormSubmitProps) {
 
       formData.append("appLoanPurpose", props.appLoanPurpose);
       if (props.selectedLoan) {
-        formData.append("appLoanAmount", String(props.selectedLoan.amount));
+        // Calculate final loan amount based on remaining balance option
+        let finalLoanAmount = props.selectedLoan.amount;
+        
+        if (props.remainingBalanceOption === 'add-to-principal' && props.reloanData?.remainingBalance) {
+          finalLoanAmount = props.selectedLoan.amount + props.reloanData.remainingBalance;
+        }
+        
+        formData.append("appLoanAmount", String(finalLoanAmount));
         formData.append("appLoanTerms", String(props.selectedLoan.months));
         formData.append("appInterest", String(props.selectedLoan.interest));
+        formData.append("remainingBalanceOption", props.remainingBalanceOption || "deduct-from-receivable");
       }
 
       props.appReferences.forEach((ref, i) => {

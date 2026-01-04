@@ -26,6 +26,10 @@ export function filterApplications(
   activeFilter: string
 ) {
   return applications
+    .filter((application) => {
+      // Exclude Withdrawn and Denied applications from active list
+      return application.status !== "Withdrawn" && application.status !== "Denied" && application.status !== "Denied by LO";
+    })
     .map((application) => ({
       ...application,
       displayStatus:

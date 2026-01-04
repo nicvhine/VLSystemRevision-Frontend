@@ -9,11 +9,13 @@ export const formatCurrency = (amount?: number | string) =>
     : "₱0.00";
 
 export const capitalizeWords = (text?: string) => {
-  if (!text) return "—";
+  if (!text || typeof text !== "string") return "—";
   return text
+    .trim()
     .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .split(/\s+/)
+    .filter(word => word.length > 0)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 };
 

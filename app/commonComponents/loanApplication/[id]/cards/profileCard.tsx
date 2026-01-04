@@ -27,8 +27,9 @@ export default function ProfileCard({
 
   const handleEmailChange = (value: string) => {
     handleChange("appEmail", value);
-    if (value && !value.toLowerCase().endsWith("@gmail.com")) {
-      setEmailError("Only Gmail addresses are accepted.");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (value && !emailRegex.test(value)) {
+      setEmailError("Please enter a valid email address.");
     } else {
       setEmailError("");
     }
@@ -126,7 +127,7 @@ export default function ProfileCard({
                 }`}
                 value={profileData?.appEmail || ""}
                 onChange={(e) => handleEmailChange(e.target.value)}
-                placeholder="Email (Gmail only)"
+                placeholder="Email address"
               />
               {emailError && <p className="text-red-500 text-xs mt-1 text-center">{emailError}</p>}
             </div>

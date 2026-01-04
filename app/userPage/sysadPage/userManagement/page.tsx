@@ -257,8 +257,8 @@ export default function UserManagementPage() {
     
     if (!editFormData.email || editFormData.email.trim() === '') {
       errors.email = language === 'en' ? 'Email is required' : 'Kinahanglan ang email';
-    } else if (!/^[^\s@]+@gmail\.com$/.test(editFormData.email)) {
-      errors.email = language === 'en' ? 'Email must be a @gmail.com address' : 'Ang email kinahanglan @gmail.com';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFormData.email)) {
+      errors.email = language === 'en' ? 'Please enter a valid email address' : 'Mangyaring magsumite ng wastong email address';
     } else {
       // Check for duplicate email (excluding current user)
       const duplicateEmail = activeStaff.find(u => 

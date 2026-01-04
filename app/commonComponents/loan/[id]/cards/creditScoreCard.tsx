@@ -32,7 +32,7 @@ const CreditScoreCard = ({ creditScore, showTip = true }: CreditScoreCardProps) 
   return (
     <div className="flex flex-col items-center bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
 
-      <h2 className="text-lg font-semibold text-red-700 mb-6">Credit Score</h2>
+      <h2 className="text-l  font-semibold text-red-700 mb-6">CREDIT SCORE</h2>
 
       <div className="relative w-44 h-44 md:w-52 md:h-52">
         <svg className="w-full h-full -rotate-90">

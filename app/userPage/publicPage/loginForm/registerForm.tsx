@@ -62,6 +62,8 @@ export default function RegisterForm({ onClose, switchToLogin, language = 'en' }
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [contactFormatError, setContactFormatError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (name || email) {
@@ -498,32 +500,50 @@ export default function RegisterForm({ onClose, switchToLogin, language = 'en' }
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  className="w-full px-4 py-3 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all mb-2 shadow-sm"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setPasswordError('');
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-3 text-base border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all mb-2 shadow-sm pr-16"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setPasswordError('');
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-600 hover:text-gray-700 font-medium"
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
-                <input
-                  type="password"
-                  placeholder="Re-enter your password"
-                  className={`w-full px-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
-                    passwordError ? 'border-red-500' : 'border-gray-300'
-                  } shadow-sm`}
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setPasswordError('');
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Re-enter your password"
+                    className={`w-full px-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all pr-16 ${
+                      passwordError ? 'border-red-500' : 'border-gray-300'
+                    } shadow-sm`}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setPasswordError('');
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-600 hover:text-gray-700 font-medium"
+                  >
+                    {showConfirmPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
                 {passwordError && <p className="text-xs text-red-600 mt-1">{passwordError}</p>}
               </div>
             </div>
@@ -534,7 +554,7 @@ export default function RegisterForm({ onClose, switchToLogin, language = 'en' }
               {!otpSent ? (
                 <>
                   <div className="text-center mb-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
                       <span className="text-2xl">🔐</span>
                     </div>
                     <p className="text-sm font-medium text-gray-700">Verify Your Account</p>
@@ -578,7 +598,7 @@ export default function RegisterForm({ onClose, switchToLogin, language = 'en' }
               ) : !otpVerified ? (
                 <>
                   <div className="text-center mb-3">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
                       <span className="text-2xl">✉️</span>
                     </div>
                     <p className="text-sm font-medium text-gray-700">Code Sent!</p>

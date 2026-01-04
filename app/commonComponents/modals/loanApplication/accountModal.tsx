@@ -205,7 +205,7 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
       const appRes = await authFetch(`${BASE_URL}/loan-applications/${selectedApp.applicationId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Disbursed" }),
+        body: JSON.stringify({ status: "Active" }),
       });
       if (!appRes.ok) {
         let msg = "Failed to update application status";
@@ -265,7 +265,6 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
         >
           <div className="flex items-start justify-between mb-2">
             <div>
-              <h2 className="text-xl font-semibold text-black">{i.ma1}</h2>
               <p className="text-sm text-gray-600 mt-1">{i.ma2}</p>
             </div>
             <button
@@ -280,34 +279,6 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
             </button>
           </div>
 
-          {/* Applicant summary + validations */}
-          <div className="mb-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-base text-black font-medium truncate" title={selectedApp?.appName || ''}>{selectedApp?.appName}</p>
-                {nameError && (
-                  <p className="text-xs text-red-600 mt-1" role="alert">{nameError}</p>
-                )}
-                <p className="text-sm text-gray-700 mt-1">
-                  {selectedApp?.appEmail ? (
-                    <>
-                      <span className="font-medium">Email:</span> {selectedApp.appEmail}
-                    </>
-                ) : (
-                  <span className="italic text-gray-500">{i.ma10}</span>
-                )}
-                </p>
-                {emailError && (
-                  <p className="text-xs text-red-600 mt-1" role="alert">{emailError}</p>
-                )}
-                {!emailError && emailWarning && (
-                  <p className="text-xs text-amber-600 mt-1" role="status">{emailWarning}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <label className="block text-sm font-medium text-black mb-2">{i.ma3}</label>
           <div className="relative">
             <select
               value={selectedCollectorId}

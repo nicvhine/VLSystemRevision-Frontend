@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/app/commonComponents/utils/loading";
 
@@ -15,55 +15,64 @@ export default function PaymentSuccessClient({ referenceNumber }: Props) {
   const [phase, setPhase] = useState<"processing" | "success" | "error">("processing");
   const [msg, setMsg] = useState("Finalizing your payment... Please wait.");
   const [redirectIn, setRedirectIn] = useState(3);
-
-  const finalize = useCallback(async () => {
-    setPhase("processing");
-    setMsg("Finalizing your payment... Please wait.");
-
-    try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(`${BASE_URL}/payments/${referenceNumber}/paymongo/success`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const result = await res.json().catch(() => undefined);
-
-      if (!res.ok) throw new Error("Failed to finalize payment");
-
-      setPhase("success");
-      setMsg("Payment successful. Redirecting you back to your dashboard...");
-
-      // Extract payment data and store in localStorage to show receipt on dashboard
-      if (result && result.paymentLogs && result.paymentLogs.length > 0) {
-        const paymentLog = result.paymentLogs[0];
-        const paymentReceiptData = {
-          referenceNumber: paymentLog.referenceNumber,
-          amount: paymentLog.amount,
-          datePaid: paymentLog.datePaid,
-          loanId: paymentLog.loanId,
-          borrowersId: paymentLog.borrowersId,
-          collector: paymentLog.collector,
-          mode: paymentLog.mode || 'GCash',
-          paidToCollection: paymentLog.paidToCollection,
-        };
-        // Store payment data to show receipt modal on dashboard
-        localStorage.setItem('pendingPaymentReceipt', JSON.stringify(paymentReceiptData));
-      }
-    } catch (err) {
-      console.error(err);
-      setPhase("error");
-      setMsg("We couldn't finalize your payment. You can retry or go back to your dashboard.");
-    }
-  }, [referenceNumber]);
+  const processingRef = useRef(false); // Prevent multiple concurrent requests
 
   useEffect(() => {
+    if (processingRef.current) return; // Only run once
+
+    const finalize = async () => {
+      processingRef.current = true; // Mark as processing immediately
+      setPhase("processing");
+      setMsg("Finalizing your payment... Please wait.");
+
+      try {
+        const token = localStorage.getItem("token");
+
+        console.log(`[PAYMENT_SUCCESS_CALL] Making request to finalize payment for ${referenceNumber}`);
+
+        const res = await fetch(`${BASE_URL}/payments/${referenceNumber}/paymongo/success`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const result = await res.json().catch(() => undefined);
+
+        if (!res.ok) {
+          console.error("[PAYMENT_ERROR] Response not OK:", { status: res.status, result });
+          throw new Error(result?.error || result?.message || "Failed to finalize payment");
+        }
+
+        setPhase("success");
+        setMsg("Payment successful. Redirecting you back to your dashboard...");
+
+        // Extract payment data and store in localStorage to show receipt on dashboard
+        if (result && result.paymentLogs && result.paymentLogs.length > 0) {
+          const paymentLog = result.paymentLogs[0];
+          const paymentReceiptData = {
+            referenceNumber: paymentLog.referenceNumber,
+            amount: paymentLog.amount,
+            datePaid: paymentLog.datePaid,
+            loanId: paymentLog.loanId,
+            borrowersId: paymentLog.borrowersId,
+            collector: paymentLog.collector,
+            mode: paymentLog.mode || 'GCash',
+            paidToCollection: paymentLog.paidToCollection,
+          };
+          // Store payment data to show receipt modal on dashboard
+          localStorage.setItem('pendingPaymentReceipt', JSON.stringify(paymentReceiptData));
+        }
+      } catch (err) {
+        console.error("[PAYMENT_ERROR]", err);
+        setPhase("error");
+        setMsg(err instanceof Error ? err.message : "We couldn't finalize your payment. You can retry or go back to your dashboard.");
+      }
+    };
+
     finalize();
-  }, [finalize]);
+  }, [referenceNumber]);
 
   useEffect(() => {
     if (phase !== "success") return;

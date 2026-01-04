@@ -257,9 +257,10 @@ export default function ProfileSettingsPanel({
                 return;
               }
 
-              // Validate Gmail only
-              if (value && !value.toLowerCase().endsWith('@gmail.com')) {
-                setEmailError('Only Gmail addresses are accepted.');
+              // Validate email format
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (value && !emailRegex.test(value)) {
+                setEmailError('Please enter a valid email address.');
               }
             }}
             placeholder={email || 'Enter email address'}

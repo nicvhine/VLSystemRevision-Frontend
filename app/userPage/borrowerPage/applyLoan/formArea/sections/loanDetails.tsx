@@ -19,6 +19,9 @@
     customLoanAmount?: number | "";
     setCustomLoanAmount?: (val: number | "") => void;
     selectedLoan?: LoanOption | null;
+    reloanData?: any;
+    remainingBalanceOption?: 'add-to-principal' | 'deduct-from-receivable' | null;
+    setRemainingBalanceOption?: (val: 'add-to-principal' | 'deduct-from-receivable' | null) => void;
   }
 
   export default function LoanDetails({
@@ -32,17 +35,23 @@
     customLoanAmount: externalCustomLoanAmount,
     setCustomLoanAmount: externalSetCustomLoanAmount,
     selectedLoan: externalSelectedLoan,
+    reloanData,
+    remainingBalanceOption: externalRemainingBalanceOption,
+    setRemainingBalanceOption: externalSetRemainingBalanceOption,
   }: LoanDetailsProps) {
     // Use local state if not controlled from parent
     const [internalCustomLoanAmount, setInternalCustomLoanAmount] = useState<number | "">("");
     const [internalSelectedLoan, setInternalSelectedLoan] = useState<LoanOption | null>(null);
     const [loanAmountError, setLoanAmountError] = useState<string>("");
+    const [internalRemainingBalanceOption, setInternalRemainingBalanceOption] = useState<'add-to-principal' | 'deduct-from-receivable' | null>(null);
 
     // Determine if using controlled or uncontrolled mode
     const customLoanAmount = externalCustomLoanAmount !== undefined ? externalCustomLoanAmount : internalCustomLoanAmount;
     const setCustomLoanAmount = externalSetCustomLoanAmount || setInternalCustomLoanAmount;
     const selectedLoan = externalSelectedLoan !== undefined ? externalSelectedLoan : internalSelectedLoan;
     const setSelectedLoan = externalSelectedLoan !== undefined ? onLoanSelect : setInternalSelectedLoan;
+    const remainingBalanceOption = externalRemainingBalanceOption !== undefined ? externalRemainingBalanceOption : internalRemainingBalanceOption;
+    const setRemainingBalanceOption = externalSetRemainingBalanceOption || setInternalRemainingBalanceOption;
 
     // Loan options
     const withCollateralOptions: LoanOption[] = [
@@ -69,16 +78,31 @@
     ];
 
     const getLoanOptions = () => {
+      let options: LoanOption[] = [];
       switch (loanType) {
         case "with":
-          return withCollateralOptions;
+          options = withCollateralOptions;
+          break;
         case "without":
-          return withoutCollateralOptions;
+          options = withoutCollateralOptions;
+          break;
         case "open-term":
-          return openTermOptions;
+          options = openTermOptions;
+          break;
         default:
-          return [];
+          options = [];
       }
+
+      // If "add to principal" is selected and there's a remaining balance, adjust the max amount
+      if (remainingBalanceOption === 'add-to-principal' && reloanData?.remainingBalance > 0) {
+        const remainingBalance = reloanData.remainingBalance;
+        return options.map(opt => ({
+          ...opt,
+          amount: Math.max(opt.amount - remainingBalance, 0),
+        }));
+      }
+
+      return options;
     };
 
     const validateLoanAmount = (amount: number) => {
@@ -136,6 +160,77 @@
           <span className="w-2 h-2 bg-red-600 rounded-full mr-3"></span>
           {language === "en" ? "Loan Details" : "Detalye sa Pahulam"}
         </h4>
+
+        {/* Remaining Balance Options for Reloan */}
+        {reloanData?.isReloan && reloanData?.remainingBalance > 0 && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h5 className="font-semibold text-blue-900 mb-2">
+              {language === "en" ? "Remaining Balance from Previous Loan" : "Natitirang Bayad mula sa Nakaraang Pahulam"}
+            </h5>
+            <p className="text-blue-800 text-sm mb-4">
+              {language === "en" 
+                ? `You have a remaining balance of ₱${(reloanData.remainingBalance || 0).toLocaleString()}. How would you like to handle this?`
+                : `May natitirang bayad kang ₱${(reloanData.remainingBalance || 0).toLocaleString()}. Paano mo gustong tratuhin ito?`
+              }
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Add to Principal Option */}
+              <button
+                type="button"
+                onClick={() => setRemainingBalanceOption('add-to-principal')}
+                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  remainingBalanceOption === 'add-to-principal'
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-gray-300 bg-white hover:border-green-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800 mb-1">
+                  {language === "en" ? "Add to Principal" : "Idagdag sa Pundasyon"}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {language === "en" 
+                    ? "Add the remaining balance to your new loan amount"
+                    : "Idagdag ang natitirang bayad sa iyong bagong pahulam"
+                  }
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  {language === "en"
+                    ? `You'll borrow more: ₱${(reloanData.remainingBalance || 0).toLocaleString()} extra`
+                    : `Hulugan mo nang mas marami: ₱${(reloanData.remainingBalance || 0).toLocaleString()} extra`
+                  }
+                </div>
+              </button>
+
+              {/* Deduct from Receivable Option */}
+              <button
+                type="button"
+                onClick={() => setRemainingBalanceOption('deduct-from-receivable')}
+                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  remainingBalanceOption === 'deduct-from-receivable'
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-300 bg-white hover:border-purple-300'
+                }`}
+              >
+                <div className="font-semibold text-gray-800 mb-1">
+                  {language === "en" ? "Deduct from Receivable" : "Ibawas sa Tumanggap"}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {language === "en" 
+                    ? "Pay off the remaining balance from your new loan"
+                    : "Bayaran ang natitirang bayad mula sa bagong pahulam"
+                  }
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  {language === "en"
+                    ? `You'll receive less: ₱${(reloanData.remainingBalance || 0).toLocaleString()} deducted`
+                    : `Matatanggap mo nang mas konti: ₱${(reloanData.remainingBalance || 0).toLocaleString()} ibawas`
+                  }
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Loan Purpose */}
@@ -228,6 +323,39 @@
                   : "Dili valid nga kantidad alang ani nga klase sa pahulam."}
               </p>
             )}
+
+            {/* Final Loan Amount for Add to Principal */}
+            {remainingBalanceOption === 'add-to-principal' && reloanData?.remainingBalance > 0 && selectedLoan && customLoanAmount !== "" && (
+              <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">
+                      {language === "en" ? "New Loan" : "Bagong Pahulam"}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      ₱{Number(customLoanAmount).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">
+                      {language === "en" ? "Remaining Balance" : "Natitirang Bayad"}
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      ₱{(reloanData.remainingBalance || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="h-px bg-emerald-200"></div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-emerald-900">
+                      {language === "en" ? "Total Loan Amount" : "Kabuuang Pahulam"}
+                    </span>
+                    <span className="text-xl font-bold text-emerald-700">
+                      ₱{(Number(customLoanAmount) + (reloanData.remainingBalance || 0)).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -276,7 +404,9 @@
                 </h5>
 
                 {(() => {
-                  const loanAmount = Number(customLoanAmount);
+                  const newLoanAmount = Number(customLoanAmount);
+                  const remainingBalance = remainingBalanceOption === 'add-to-principal' ? (reloanData?.remainingBalance || 0) : 0;
+                  const loanAmount = newLoanAmount + remainingBalance;
                   const interestRate = Number(selectedLoan.interest) / 100;
                   const months = selectedLoan.months || 12;
 
@@ -296,8 +426,21 @@
 
                   return (
                     <div className="space-y-2 text-gray-700 text-sm">
+                      {remainingBalanceOption === 'add-to-principal' && remainingBalance > 0 && (
+                        <>
+                          <p>
+                            <span className="font-sm">{language === "en" ? "New Loan Amount:" : "Bagong Kantidad sa Pahulam:"}</span>{" "}
+                            ₱{newLoanAmount.toLocaleString()}
+                          </p>
+                          <p>
+                            <span className="font-sm">{language === "en" ? "Remaining Balance:" : "Natitirang Bayad:"}</span>{" "}
+                            ₱{remainingBalance.toLocaleString()}
+                          </p>
+                          <div className="h-px bg-gray-300 my-2"></div>
+                        </>
+                      )}
                       <p>
-                        <span className="font-sm">{language === "en" ? "Loan Amount:" : "Kantidad sa Pahulam:"}</span>{" "}
+                        <span className="font-sm">{language === "en" ? "Total Loan Amount:" : "Kabuuang Kantidad sa Pahulam:"}</span>{" "}
                         ₱{loanAmount.toLocaleString()}
                       </p>
                       <p>

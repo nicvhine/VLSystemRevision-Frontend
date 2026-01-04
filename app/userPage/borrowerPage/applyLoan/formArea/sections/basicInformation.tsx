@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import MapComponent from "../../MapComponent"; 
 import { BasicInformationProps } from "@/app/commonComponents/utils/Types/components";
-import DuplicateApplicationModal from "../modals/duplicate";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -36,13 +35,9 @@ export default function BasicInformation({
   const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null);
   const [nameError, setNameError] = useState("");
   const [dobError, setDobError] = useState("");
-  const [duplicateError, setDuplicateError] = useState("");
   const [phoneConflictError, setPhoneConflictError] = useState("");
   const [emailConflictError, setEmailConflictError] = useState("");
   const [spouseNameError, setSpouseNameError] = useState("");
-
-  // ✅ Only modal message needed
-  const [modalMessage, setModalMessage] = useState("");
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAppAddress(e.target.value);
@@ -78,51 +73,6 @@ export default function BasicInformation({
       setDobError("");
     }
   };
-
-  // Check for duplicate applications
-  useEffect(() => {
-    const checkDuplicate = async () => {
-      if (!appName || !appDob || !appEmail) return;
-
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${BASE_URL}/loan-applications/check-duplicate`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ appName, appDob, appEmail }),
-        });
-
-        const data = await res.json();
-
-        if (data.isDuplicate) {
-          if (["Pending", "Applied", "Cleared", "Approved", "Disbursed"].includes(data.status)) {
-            setModalMessage(
-              language === "en"
-                ? "Oops! It looks like you have a pending application with us. Please track your application status. If you think there's a mistake, kindly contact our office."
-                : "Naay pending nga aplikasyon sa among opisina. Palihug i-track ang imong aplikasyon. Kung naay sayop, palihug kontaka ang opisina."
-            );
-          } else if (data.status === "Active") {
-            setModalMessage(
-              language === "en"
-                ? "Oops! It looks like you have an existing active account with us. If you're a borrower, you may apply for a re-loan through the borrower portal. If you think there's a mistake, kindly contact our office."
-                : "Aduna kay existing nga active account sa among sistema. Kung ikaw borrower, mahimo ka mag-reloan sa borrower portal. Kung naay sayop, palihug kontaka ang opisina."
-            );
-          }
-        } else {
-          setModalMessage("");
-          setDuplicateError("");
-        }
-      } catch (err) {
-        console.error("Error checking duplicate application:", err);
-      }
-    };
-
-    const timeout = setTimeout(checkDuplicate, 500);
-    return () => clearTimeout(timeout);
-  }, [appName, appDob, appEmail, language]);
 
   // Check for contact/email conflicts
   useEffect(() => {
@@ -172,45 +122,6 @@ export default function BasicInformation({
 
   return (
     <>
-      {/* Duplicate Application Modal */}
-      {modalMessage && (
-        <DuplicateApplicationModal
-          language={language}
-          message={modalMessage}
-          onClose={() => {
-            // Close modal
-            setModalMessage("");
-
-            // Clear all fields
-            setAppName("");
-            setAppDob("");
-            setAppContact("");
-            setAppEmail("");
-            setAppMarital("");
-            setAppChildren(0);
-            setAppSpouseName("");
-            setAppSpouseOccupation("");
-            setAppAddress("");
-            
-            // Reset errors
-            setNameError("");
-            setDobError("");
-            setDuplicateError("");
-            setPhoneConflictError("");
-            setEmailConflictError("");
-            setSpouseNameError("");
-            setError("");
-            
-            // Reset map marker
-            setMarkerPosition(null);
-
-            // Optional: reset form if resetForm prop exists
-            if (resetForm) resetForm();
-          }}
-        />
-      )}
-
-
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
         <h4 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
           <span className="w-2 h-2 bg-red-600 rounded-full mr-3"></span>
@@ -320,12 +231,8 @@ export default function BasicInformation({
                   (showFieldErrors && (missingFields.includes("Email Address") || emailConflictError)) ? "border-red-500" : "border-gray-200"
                 }`}
                 placeholder={language === "en" ? "Enter email" : "Isulod ang email"}
-              />
-              <span className="px-4 py-3 border border-l-0 border-gray-200 rounded-r-lg bg-gray-100 text-gray-700 select-none">
-                @gmail.com
-              </span>
+              />  
             </div>
-            {duplicateError && <p className="text-red-500 text-sm mt-1">{duplicateError}</p>}
             {emailConflictError && <p className="text-red-500 text-sm mt-1">{emailConflictError}</p>}
           </div>
         </div>

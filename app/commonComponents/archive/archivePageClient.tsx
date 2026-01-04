@@ -139,7 +139,7 @@ export default function ArchivePageClient() {
                 ) : paginatedApplications.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="text-center py-6 text-gray-500 text-sm">
-                      No archived (Denied) applications found.
+                      No archived applications found.
                     </td>
                   </tr>
                 ) : (
@@ -169,8 +169,14 @@ export default function ArchivePageClient() {
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {formatCurrency(application.appTotalPayable)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-red-600 font-semibold">
-                        {application.status}
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          application.status === 'Withdrawn' 
+                            ? 'bg-amber-100 text-amber-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {application.status}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <a

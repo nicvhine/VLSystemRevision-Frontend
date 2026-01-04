@@ -15,6 +15,8 @@ const navbarTranslation = {
     tab13: "Borrowers",
     tab14: "Endorsements",
     tab15: "PayMongo Payments",
+    tab16: "Payment History",
+    tab17: "Upcoming Bills",
 
     //Dropdown
     t1: "Change",
@@ -68,6 +70,8 @@ const navbarTranslation = {
     tab13: "Mga Nanghulam",
     tab14: "Mga Endorsement",
     tab15: "Mga Bayad sa PayMongo",
+    tab16: "Kasaysayan sa Pagbabayad",
+    tab17: "Mga Papantay na Biya",
 
     //Dropdown
     t1: "Ilisi",

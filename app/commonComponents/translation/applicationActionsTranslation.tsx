@@ -40,7 +40,7 @@ const applicationActionsTranslation = {
 
     // Manager account modal
     ma1: "Create Account",
-    ma2: "Assign a collector and generate borrower credentials.",
+    ma2: "Assign a collector ",
     ma3: "Assign Collector",
     ma4: "Loading collectors...",
     ma5: "Select a collector",

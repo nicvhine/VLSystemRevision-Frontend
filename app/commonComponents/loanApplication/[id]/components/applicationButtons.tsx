@@ -79,7 +79,7 @@ const ApplicationButtons: React.FC<ApplicationButtonsProps> = ({
 
   return (
     <>
-      {application.status === "Applied" && role === "loan officer" && (
+      {application.status === "Applied" && role === "loan officer" && !application.pendingWithdrawalRequest && (
         <>
           {/* set schedule */}
           <button

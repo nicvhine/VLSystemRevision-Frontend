@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useSearchParams } from "next/navigation";
 import { ButtonDotsLoading, SubmitProgressModal } from "@/app/commonComponents/utils/loading";
 import { useRouter } from "next/navigation";
 
@@ -14,7 +15,8 @@ import AgentDropdown from "./sections/agent";
 
 import { ErrorModal, DocumentUploadErrorModal } from "./modals/errorModal";
 import SuccessModalWithAnimation from "./modals/successModal";
-import AgreementModal from '@/app/commonComponents/modals/loanAgreement/regularLoan/modal';
+import RegularAgreementModal from '@/app/commonComponents/modals/applicationTerms/regularLoan/modal';
+import OpenAgreementModal from '@/app/commonComponents/modals/applicationTerms/openTerm/modal';
 
 import { useUpdateMissingFields } from "./hooks/updateMissingFields";
 import { useFormSubmit } from "./hooks/useFormSubmit";
@@ -114,6 +116,10 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
   const [selectedLoan, setSelectedLoan] = useState<any | null>(null);
   const [appLoanPurpose, setAppLoanPurpose] = useState("");
   const [customLoanAmount, setCustomLoanAmount] = useState<number | "">("");
+  
+  // Reloan data
+  const [reloanData, setReloanData] = useState<any | null>(null);
+  const [remainingBalanceOption, setRemainingBalanceOption] = useState<'add-to-principal' | 'deduct-from-receivable' | null>(null);
 
   // Uploads 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -224,7 +230,9 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
     requiresCollateral, collateralType, collateralValue, collateralDescription, ownershipStatus, appAgent,
     photo2x2, uploadedFiles, requiredDocumentsCount, missingFields, setMissingFields, setAgentMissingError,
     API_URL, COMPANY_NAME, TERMS_VERSION, PRIVACY_VERSION, language,
-    borrowersId
+    borrowersId,
+    reloanData,
+    remainingBalanceOption,
   });
 
   const [showAgreementModal, setShowAgreementModal] = useState(false);
@@ -253,6 +261,21 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
   useEffect(() => {
     if (appAgent.trim()) setAgentMissingError(false);
   }, [appAgent]);
+
+  // Load reloan data from URL params
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const reloanParam = searchParams.get('reloan');
+    if (reloanParam) {
+      try {
+        const data = JSON.parse(decodeURIComponent(reloanParam));
+        setReloanData(data);
+      } catch (err) {
+        console.error('Failed to parse reloan data:', err);
+      }
+    }
+  }, [searchParams]);
 
   // Load current borrower id from localStorage (set by auth flow)
   useEffect(() => {
@@ -433,6 +456,9 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
             onLoanSelect={(loan) => setSelectedLoan(loan)} missingFields={missingFields}
             customLoanAmount={customLoanAmount} setCustomLoanAmount={setCustomLoanAmount}
             selectedLoan={selectedLoan}
+            reloanData={reloanData}
+            remainingBalanceOption={remainingBalanceOption}
+            setRemainingBalanceOption={setRemainingBalanceOption}
           />
         </div>
 
@@ -488,37 +514,76 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
         />
       )}
 
-      {/* Agreement Modal shown before final submit */}
-      <AgreementModal
-        isOpen={showAgreementModal}
-        onClose={() => setShowAgreementModal(false)}
-        application={{
-          appName,
-          appAddress,
-          appLoanAmount: selectedLoan?.amount || (customLoanAmount || 0),
-          appInterestRate: selectedLoan?.interestRate || 0,
-          appLoanTerms: selectedLoan?.terms || selectedLoan?.loanTerm || null,
-          appTotalPayable: selectedLoan?.totalPayable || null,
-          dateDisbursed: null,
-        }}
-        onAccept={async () => {
-          setShowAgreementModal(false);
-          try {
-            const result = await performSubmit();
-            if (result.ok && result.data.application?.applicationId) {
-              setLoanId(result.data.application.applicationId);
-              setShowSuccessModal(true);
-              clearSavedData();
-            } else {
-              setErrorMessage(result.error?.message || "Submission failed");
+      {/* Agreement Modal shown before final submit - Different modal based on loan type */}
+      {loanTypeParam === 'open-term' ? (
+        <OpenAgreementModal
+          isOpen={showAgreementModal}
+          onClose={() => setShowAgreementModal(false)}
+          application={{
+            appName,
+            appAddress,
+            appLoanAmount: remainingBalanceOption === 'add-to-principal' && reloanData?.remainingBalance 
+              ? (selectedLoan?.amount || 0) + reloanData.remainingBalance
+              : selectedLoan?.amount || (customLoanAmount || 0),
+            appInterestRate: selectedLoan?.interest || 0,
+            appLoanTerms: selectedLoan?.months || null,
+            appTotalPayable: selectedLoan?.amount || 0,
+            dateDisbursed: new Date().toISOString(),
+          }}
+          onAccept={async () => {
+            setShowAgreementModal(false);
+            try {
+              const result = await performSubmit();
+              if (result.ok && result.data.application?.applicationId) {
+                setLoanId(result.data.application.applicationId);
+                setShowSuccessModal(true);
+                clearSavedData();
+              } else {
+                setErrorMessage(result.error?.message || "Submission failed");
+                setShowErrorModal(true);
+              }
+            } catch (err: any) {
+              setErrorMessage(err.message || "Submission failed");
               setShowErrorModal(true);
             }
-          } catch (err: any) {
-            setErrorMessage(err.message || "Submission failed");
-            setShowErrorModal(true);
-          }
-        }}
-      />
+          }}
+        />
+      ) : (
+        <RegularAgreementModal
+          isOpen={showAgreementModal}
+          onClose={() => setShowAgreementModal(false)}
+          application={{
+            appName,
+            appAddress,
+            appLoanAmount: remainingBalanceOption === 'add-to-principal' && reloanData?.remainingBalance 
+              ? (selectedLoan?.amount || 0) + reloanData.remainingBalance
+              : selectedLoan?.amount || (customLoanAmount || 0),
+            appInterestRate: selectedLoan?.interest || 0,
+            appLoanTerms: selectedLoan?.months || null,
+            appTotalPayable: selectedLoan?.amount && selectedLoan?.interest && selectedLoan?.months
+              ? selectedLoan.amount * (1 + (selectedLoan.interest * selectedLoan.months) / 100)
+              : null,
+            dateDisbursed: new Date().toISOString(),
+          }}
+          onAccept={async () => {
+            setShowAgreementModal(false);
+            try {
+              const result = await performSubmit();
+              if (result.ok && result.data.application?.applicationId) {
+                setLoanId(result.data.application.applicationId);
+                setShowSuccessModal(true);
+                clearSavedData();
+              } else {
+                setErrorMessage(result.error?.message || "Submission failed");
+                setShowErrorModal(true);
+              }
+            } catch (err: any) {
+              setErrorMessage(err.message || "Submission failed");
+              setShowErrorModal(true);
+            }
+          }}
+        />
+      )}
     </div>
   );
 });

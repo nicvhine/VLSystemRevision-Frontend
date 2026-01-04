@@ -10,12 +10,14 @@ interface PaymentProgressCardProps {
   collections: Collection[];
   paymentProgress: number; // only for regular loans
   borrowerId: string;
+  pendingReloan?: any | null; // optional pending reloan application
 }
 
 export default function PaymentProgressCard({
   collections,
   paymentProgress,
   borrowerId,
+  pendingReloan,
 }: PaymentProgressCardProps) {
   const { handleReloan } = useReloan();
 
@@ -75,8 +77,8 @@ export default function PaymentProgressCard({
   // Circle stroke offset
   const offset = circumference * (1 - displayProgress / 100);
 
-  // Reloan rule
-  const isReloanAllowed = displayProgress >= 70;
+  // Reloan rule: must be 70%+ progress AND no pending/approved reloan
+  const isReloanAllowed = displayProgress >= 70 && !pendingReloan;
 
   return (
     <div className="w-full bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center relative hover:shadow-xl duration-300">
@@ -179,7 +181,9 @@ export default function PaymentProgressCard({
 
         {!isReloanAllowed && (
           <span className="text-xs text-gray-400 mt-2 text-center">
-            You may only reloan once progress reaches 70%
+            {pendingReloan
+              ? `You have a ${pendingReloan.status === 'Approved' ? 'approved' : 'pending'} reloan application. Complete it before applying again.`
+              : 'You may only reloan once progress reaches 70%'}
           </span>
         )}
       </div>
