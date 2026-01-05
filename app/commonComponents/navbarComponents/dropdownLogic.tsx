@@ -220,8 +220,13 @@ export function useProfileDropdownLogic(
         return false;
       }
   
-      if (!emailRes.ok) throw new Error('Failed to update email.');
-  
+      if (!emailRes.ok) {
+        const errorData = await emailRes.json();
+        console.error('Email update failed:', emailRes.status, errorData);
+        setEmailError(errorData.error || 'Failed to update email.');
+        return false;
+      }
+
       localStorage.setItem('email', editingEmail);
       try {
         window.dispatchEvent(new CustomEvent('emailUpdated', { detail: { email: editingEmail } }));
@@ -231,7 +236,7 @@ export function useProfileDropdownLogic(
       setSettingsSuccess('✔ Email changed successfully.');
       return true;
     } catch (err) {
-      console.error(err);
+      console.error('Email update error:', err);
       setEmailError('Failed to update email.');
       return false;
     }
@@ -333,7 +338,12 @@ export function useProfileDropdownLogic(
         return false;
       }
   
-      if (!res.ok) throw new Error("Failed to update phone number.");
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error('Phone update failed:', res.status, errorData);
+        setPhoneError(errorData.error || "Failed to update phone number.");
+        return false;
+      }
   
       localStorage.setItem("phoneNumber", editingPhone);
       try {
@@ -344,7 +354,7 @@ export function useProfileDropdownLogic(
       setSettingsSuccess('✔ Phone number changed successfully.');
       return true;
     } catch (err) {
-      console.error(err);
+      console.error('Phone update error:', err);
       setPhoneError("Failed to update phone number.");
       return false;
     }
@@ -382,7 +392,7 @@ export function useProfileDropdownLogic(
     try {
       // USERNAME UPDATE
       if (editingUsername.trim() !== '' && editingUsername !== currentUsername) {
-        const checkResponse = await fetch(`${BASE_URL}/check-username/${editingUsername}`, {
+        const checkResponse = await fetch(`${BASE_URL}/borrowers/check-username/${editingUsername}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -405,7 +415,8 @@ export function useProfileDropdownLogic(
 
         if (!usernameRes.ok) {
           const error = await usernameRes.json();
-          setUsernameError(error.message || 'Failed to update username');
+          console.error('Username update error:', error);
+          setUsernameError(error.message || error.error || 'Failed to update username');
           return;
         }
 
@@ -435,33 +446,26 @@ export function useProfileDropdownLogic(
         }
       }
 
-      // PHONE UPDATE
+      // PHONE UPDATE - Requires SMS Verification
       if (editingPhone.trim() !== '' && editingPhone !== currentPhone) {
         if (!editingPhone.startsWith('09') || editingPhone.length !== 11) {
           setPhoneError('Phone number must start with 09 and be exactly 11 digits.');
           return;
         }
 
-        const phoneRes = await fetch(`${BASE_URL}/users/${userId}/update-phoneNumber`, {
-          method: 'PUT',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify({ phoneNumber: editingPhone }),
-        });
-
-        if (phoneRes.status === 409) {
-          const data = await phoneRes.json();
-          setPhoneError(data.error || 'Phone number already in use.');
+        // Send SMS code to new phone number
+        try {
+          await sendSmsCode();
+          // Show OTP modal for user to verify
+          setOtpType('sms');
+          setShowOtpModal(true);
+          setOtpVisible(true);
+          setTimeout(() => setOtpAnimateIn(true), 10);
+          return; // Stop here - wait for SMS verification
+        } catch (error) {
+          setPhoneError('Failed to send verification code. Please try again.');
           return;
         }
-
-        if (!phoneRes.ok) {
-          throw new Error('Failed to update phone number.');
-        }
-
-        localStorage.setItem('phoneNumber', editingPhone);
       }
 
       // PASSWORD UPDATE
@@ -482,7 +486,7 @@ export function useProfileDropdownLogic(
           return;
         }
 
-        const passwordRes = await fetch(`${BASE_URL}/users/${userId}/change-password`, {
+        const passwordRes = await fetch(`${BASE_URL}/borrowers/${borrowersId}/change-password`, {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
@@ -501,7 +505,10 @@ export function useProfileDropdownLogic(
         }
 
         if (!passwordRes.ok) {
-          throw new Error('Failed to update password.');
+          const errorData = await passwordRes.json();
+          console.error('Password update error:', errorData);
+          setPasswordError(errorData.message || errorData.error || 'Failed to update password.');
+          return;
         }
       }
 

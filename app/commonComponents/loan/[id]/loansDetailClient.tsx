@@ -208,46 +208,6 @@ const DelinquencyCard = ({ collections }: { collections: any[] }) => {
     severity === "low" ? "Low Delinquency" :
     severity === "medium" ? "Medium Delinquency" :
     "High Delinquency";
-
-  return (
-    <div className={`rounded-2xl p-4 border ${severityColor}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{icon}</span>
-          <div>
-            <h3 className="text-base font-bold text-gray-800">Payment Status</h3>
-            <p className="text-xs text-gray-600">{statusText}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white rounded-lg p-3 border border-gray-100">
-          <p className="text-xs text-gray-600 font-medium mb-1">Overdue</p>
-          <p className={`text-2xl font-bold ${delinquentCount > 0 ? 'text-red-600' : 'text-green-600'}`}>{delinquentCount}</p>
-        </div>
-
-        <div className="bg-white rounded-lg p-3 border border-gray-100">
-          <p className="text-xs text-gray-600 font-medium mb-1">Unpaid</p>
-          <p className="text-2xl font-bold text-orange-600">{totalUnpaid}</p>
-        </div>
-
-        <div className="bg-white rounded-lg p-3 border border-gray-100">
-          <p className="text-xs text-gray-600 font-medium mb-1">Oldest</p>
-          <p className={`text-2xl font-bold ${oldestDelinquentDays > 30 ? 'text-red-600' : oldestDelinquentDays > 7 ? 'text-yellow-600' : oldestDelinquentDays > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-            {oldestDelinquentDays > 0 ? oldestDelinquentDays : '—'}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg p-3 border border-gray-100">
-          <p className="text-xs text-gray-600 font-medium mb-1">Amount</p>
-          <p className={`text-lg font-bold ${delinquentCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {delinquentCount > 0 ? `₱${(totalDelinquentAmount / 1000).toFixed(0)}k` : '—'}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 // ------------------- Info Component -------------------
