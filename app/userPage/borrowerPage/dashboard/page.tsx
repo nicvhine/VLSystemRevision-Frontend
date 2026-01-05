@@ -158,10 +158,18 @@ export default function BorrowerDashboard() {
   const isDenied = latestApplication?.status === 'Denied' || latestApplication?.status === 'Denied by LO';
   const isWithdrawn = latestApplication?.status === 'Withdrawn';
   const loan = activeLoan ?? latestApplication?.loan ?? latestApplication?.currentLoan ?? null;
+  const isOpenTermLoan = loan?.loanType === 'Open-Term Loan' || loan?.isOpenTerm === true;
   const collections = loanCollections.length > 0 ? loanCollections : (latestApplication?.collections || latestApplication?.upcomingCollections || []);
   const paid = Number(loan?.paidAmount ?? 0);
   const remaining = Number(loan?.balance ?? loan?.balance ?? latestApplication?.appTotalPayable ?? 0);
-  const percentPaid = (paid + remaining) > 0 ? Math.round((paid / (paid + remaining)) * 100) : 0;
+  const percentPaid = (() => {
+    if (isOpenTermLoan) {
+      const principal = Number(loan?.principal ?? loan?.originalPrincipal ?? latestApplication?.appLoanAmount ?? 0);
+      return principal > 0 ? Math.round(((principal - remaining) / principal) * 100) : 0;
+    } else {
+      return (paid + remaining) > 0 ? Math.round((paid / (paid + remaining)) * 100) : 0;
+    }
+  })();
   const upcoming = Array.isArray(collections)
     ? collections
         .filter((c: any) => c.status !== 'Paid')
@@ -295,6 +303,12 @@ export default function BorrowerDashboard() {
                           <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fontSize="28" fill="#111827" fontWeight={700}>{percentPaid}%</text>
                         </svg>
                       </div>
+                      
+                      {isOpenTermLoan && (
+                        <p className="text-xs text-gray-500 text-center mb-3">
+                          For Open-Term loans, progress is based on principal reduction: (Principal - Remaining) / Principal
+                        </p>
+                      )}
                       
                       <div className="grid grid-cols-2 gap-3 mt-auto">
                         <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 transition-colors duration-300 cursor-default">

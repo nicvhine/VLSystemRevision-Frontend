@@ -145,10 +145,19 @@ export default function UpcomingBillsPage() {
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
 
   // Calculate summary stats
+  const isOpenTermLoan = loan?.loanType === 'Open-Term Loan' || loan?.isOpenTerm === true;
   const totalAmount = collections.reduce((sum, c) => sum + Number(c.periodAmount ?? 0), 0);
   const totalPaid = collections.reduce((sum, c) => sum + Number(c.paidAmount ?? 0), 0);
   const totalRemaining = totalAmount - totalPaid;
-  const paymentProgress = totalAmount > 0 ? Math.round((totalPaid / totalAmount) * 100) : 0;
+  const paymentProgress = (() => {
+    if (isOpenTermLoan) {
+      const principal = Number(loan?.principal ?? loan?.originalPrincipal ?? 0);
+      const remainingPrincipal = Number(loan?.balance ?? 0);
+      return principal > 0 ? Math.round(((principal - remainingPrincipal) / principal) * 100) : 0;
+    } else {
+      return totalAmount > 0 ? Math.round((totalPaid / totalAmount) * 100) : 0;
+    }
+  })();
   
   const unpaidCollections = collections.filter(c => c.status !== 'Paid');
   const nextDue = unpaidCollections.length > 0 
@@ -310,30 +319,6 @@ export default function UpcomingBillsPage() {
             </div>
           )}
 
-          {/* Summary Stats */}
-          {!loading && !error && collections.length > 0 && (
-            <div className="mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <StatCard label="Total Loan Amount" value={`₱${totalAmount.toLocaleString()}`} icon={Calendar} />
-                <StatCard label="Amount Paid" value={`₱${totalPaid.toLocaleString()}`} valueColor="text-green-600" icon={CheckCircle} />
-                <StatCard label="Remaining Balance" value={`₱${totalRemaining.toLocaleString()}`} valueColor="text-red-600" icon={AlertCircle} />
-              </div>
-              
-              {/* Progress Bar */}
-              <div className="bg-gradient-to-r from-white to-gray-50 rounded-2xl p-6 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-bold text-gray-900">Payment Progress</p>
-                  <span className="text-2xl font-bold text-red-600">{paymentProgress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                  <div
-                    className="bg-gradient-to-r from-red-500 to-red-600 h-full rounded-full transition-all duration-700 shadow-lg"
-                    style={{ width: `${paymentProgress}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Loading State */}
