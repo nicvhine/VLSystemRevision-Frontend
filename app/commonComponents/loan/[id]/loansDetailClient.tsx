@@ -36,7 +36,7 @@ const ProgressCircle = ({ value, label, subLabel, displayValue, centerSubLabel }
     value < 50 ? "redGradient" : value < 75 ? "yellowGradient" : "greenGradient";
 
   return (
-    <div className="flex flex-col items-center bg-white p-8 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300 border-2 border-red-100">
+    <div className="flex flex-col items-center bg-white p-8 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300 border-2 border-transparent">
       <h2 className="text-base font-semibold text-red-700 mb-6 uppercase tracking-wide">{label}</h2>
       <div className="relative w-44 h-44 md:w-52 md:h-52">
         <svg className="w-full h-full -rotate-90">
@@ -208,96 +208,6 @@ const DelinquencyCard = ({ collections }: { collections: any[] }) => {
     severity === "low" ? "Low Delinquency" :
     severity === "medium" ? "Medium Delinquency" :
     "High Delinquency";
-
-  return (
-    <div className={`rounded-2xl p-6 border ${severityColor}`}>
-      <div className="flex items-start justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{icon}</span>
-          <div>
-            <h3 className="text-lg font-bold text-gray-800">Delinquency Status</h3>
-            <p className="text-xs text-gray-600">Payment overdue analysis</p>
-          </div>
-        </div>
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${badgeColor}`}>
-          {statusText}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-        {/* Overdue Payments */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-xs text-gray-600 font-medium mb-2">OVERDUE</p>
-          <p className={`text-3xl font-bold ${delinquentCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {delinquentCount}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {delinquentCount === 1 ? 'payment' : 'payments'} past due
-          </p>
-        </div>
-
-        {/* Total Unpaid */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-xs text-gray-600 font-medium mb-2">UNPAID</p>
-          <p className="text-3xl font-bold text-orange-600">
-            {totalUnpaid}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            total due
-          </p>
-        </div>
-
-        {/* Days Overdue */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-xs text-gray-600 font-medium mb-2">OLDEST</p>
-          <p className={`text-3xl font-bold ${oldestDelinquentDays > 30 ? 'text-red-600' : oldestDelinquentDays > 7 ? 'text-yellow-600' : oldestDelinquentDays > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-            {oldestDelinquentDays > 0 ? oldestDelinquentDays : '—'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            days overdue
-          </p>
-        </div>
-
-        {/* Amount */}
-        <div className="bg-white rounded-lg p-4 border border-gray-200">
-          <p className="text-xs text-gray-600 font-medium mb-2">AMOUNT</p>
-          <p className={`text-lg font-bold ${delinquentCount > 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {delinquentCount > 0 ? `₱${totalDelinquentAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : '—'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            at risk
-          </p>
-        </div>
-      </div>
-
-      {/* Status Message */}
-      {delinquentCount > 0 && (
-        <div className="bg-red-100 border border-red-300 rounded-lg p-4 mt-4">
-          <p className="text-sm font-semibold text-red-800 mb-1">⚠️ Immediate Action Required</p>
-          <p className="text-sm text-red-700">
-            {delinquentCount} {delinquentCount === 1 ? 'payment is' : 'payments are'} overdue by {oldestDelinquentDays} {oldestDelinquentDays === 1 ? 'day' : 'days'}. 
-            Total overdue amount: <span className="font-bold">₱{totalDelinquentAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-          </p>
-        </div>
-      )}
-
-      {delinquentCount === 0 && totalUnpaid > 0 && (
-        <div className="bg-blue-100 border border-blue-300 rounded-lg p-4 mt-4">
-          <p className="text-sm text-blue-800">
-            ℹ️ <span className="font-semibold">{totalUnpaid}</span> {totalUnpaid === 1 ? 'payment is' : 'payments are'} due but not yet overdue. Monitor closely.
-          </p>
-        </div>
-      )}
-
-      {delinquentCount === 0 && totalUnpaid === 0 && (
-        <div className="bg-green-100 border border-green-300 rounded-lg p-4 mt-4">
-          <p className="text-sm text-green-800">
-            ✓ <span className="font-semibold">All payments are up to date.</span> Excellent standing!
-          </p>
-        </div>
-      )}
-    </div>
-  );
 };
 
 // ------------------- Info Component -------------------
@@ -307,6 +217,202 @@ const Info = ({ label, value }: { label: string; value: any }) => (
     <p className="text-gray-900 text-base font-semibold group-hover:text-red-600 transition">{value}</p>
   </div>
 );
+
+// ------------------- Loan Performance Card -------------------
+const LoanPerformanceCard = ({ collections, loanType, appLoanAmount, appTotalPayable }: any) => {
+  const isOpenTerm = loanType?.toLowerCase() === "open-term loan";
+  const totalExpectedPayments = collections.length;
+  const paidPayments = collections.filter((c: any) => c.status === "Paid").length;
+  const unpaidPayments = collections.filter((c: any) => c.status === "Unpaid").length;
+  const onTimePayments = collections.filter((c: any) => {
+    if (c.status === "Paid" && c.datePaid) {
+      return new Date(c.datePaid) <= new Date(c.dueDate);
+    }
+    return false;
+  }).length;
+
+  const totalPayable = isOpenTerm ? appLoanAmount : appTotalPayable;
+  const totalPaid = collections.reduce((sum: number, c: any) => sum + (c.paidAmount || 0), 0);
+  const avgPaymentSize = paidPayments > 0 ? totalPaid / paidPayments : 0;
+
+  const paymentComplianceRate = totalExpectedPayments > 0 ? ((onTimePayments / totalExpectedPayments) * 100) : 0;
+  
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+      <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+        Performance
+      </h3>
+
+      <div className="space-y-3">
+
+        {/* Paid Status */}
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-xs font-semibold text-gray-900">Completion</p>
+            <p className="text-sm font-bold text-red-600">{((paidPayments / totalExpectedPayments) * 100).toFixed(0)}%</p>
+          </div>
+          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-red-500 rounded-full" style={{ width: `${(paidPayments / totalExpectedPayments) * 100}%` }}></div>
+          </div>
+        </div>
+
+        {/* Financial Summary - 2x2 Grid */}
+        <div className="grid grid-cols-2 gap-3 pt-2 text-sm">
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Disbursed</p>
+            <p className="font-bold text-gray-900">{formatCurrency(totalPayable)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Collected</p>
+            <p className="font-bold text-gray-900">{formatCurrency(totalPaid)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Avg Payment</p>
+            <p className="font-bold text-gray-900">{formatCurrency(avgPaymentSize)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Balance</p>
+            <p className="font-bold text-gray-900">{formatCurrency(totalPayable - totalPaid)}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ------------------- Risk Assessment Card -------------------
+const RiskAssessmentCard = ({ loan, collections, creditScore }: any) => {
+  const delinquentPayments = collections.filter((c: any) => {
+    if (c.status === "Unpaid") {
+      const dueDate = new Date(c.dueDate);
+      return dueDate < new Date();
+    }
+    return false;
+  }).length;
+
+  // Credit score is on 0-10 scale, where 10 is best
+  let riskLevel = "Low";
+  let riskColor = "bg-green-50 border-green-300";
+  let riskBadgeColor = "bg-green-100 text-green-800";
+  let icon = "✓";
+
+  if (delinquentPayments > 5 || creditScore < 3) {
+    riskLevel = "Critical";
+    riskColor = "bg-red-50 border-red-300";
+    riskBadgeColor = "bg-red-100 text-red-800";
+    icon = "🔴";
+  } else if (delinquentPayments > 2 || creditScore < 5) {
+    riskLevel = "High";
+    riskColor = "bg-orange-50 border-orange-300";
+    riskBadgeColor = "bg-orange-100 text-orange-800";
+    icon = "⚠️";
+  } else if (delinquentPayments > 0 || creditScore < 7) {
+    riskLevel = "Medium";
+    riskColor = "bg-amber-50 border-amber-300";
+    riskBadgeColor = "bg-amber-100 text-amber-800";
+    icon = "⚠️";
+  }
+
+  const creditStatus = creditScore >= 8 ? "Excellent" : creditScore >= 6 ? "Good" : creditScore >= 4 ? "Fair" : "Poor";
+  const creditStatusColor = creditScore >= 8 ? "text-green-600" : creditScore >= 6 ? "text-blue-600" : creditScore >= 4 ? "text-amber-600" : "text-red-600";
+
+  return (
+    <div className="rounded-2xl p-4 bg-white">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-bold text-gray-900">Risk Profile</h3>
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${riskBadgeColor}`}>
+          {icon} {riskLevel}
+        </span>
+      </div>
+
+      <div className="space-y-3">
+        {/* Credit Score - Horizontal */}
+        <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
+          <div>
+            <p className="text-xs text-gray-600 font-medium">Credit Score</p>
+            <p className="text-sm text-gray-900">{creditStatus}</p>
+          </div>
+          <p className={`text-2xl font-bold ${creditStatusColor}`}>{creditScore.toFixed(1)}</p>
+        </div>
+
+        {/* Delinquent - Horizontal */}
+        <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100">
+          <div>
+            <p className="text-xs text-gray-600 font-medium">Delinquent</p>
+            <p className="text-sm text-gray-900">{delinquentPayments === 0 ? 'All current' : `${delinquentPayments} overdue`}</p>
+          </div>
+          <p className={`text-2xl font-bold ${delinquentPayments === 0 ? 'text-green-600' : delinquentPayments <= 2 ? 'text-amber-600' : 'text-red-600'}`}>
+            {delinquentPayments}
+          </p>
+        </div>
+
+        {/* Action - Compact */}
+        <div className="p-3 bg-red-100 rounded-lg border border-gray-100">
+          <p className="text-xs font-bold text-gray-900 mb-1">ACTION</p>
+          <p className="text-xs text-gray-700">
+            {riskLevel === "Critical" ? "⛔ Immediate intervention" : riskLevel === "High" ? "⚠️ Close monitoring" : riskLevel === "Medium" ? "👁️ Standard monitoring" : "✓ Maintain monitoring"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ------------------- Additional Loan Terms Card -------------------
+const LoanTermsDetailCard = ({ loan }: any) => {
+  const dateDisbursed = new Date(loan.dateDisbursed);
+  const loanTerm = loan.appLoanTerms || 0;
+  const dueDate = new Date(dateDisbursed);
+  dueDate.setMonth(dueDate.getMonth() + loanTerm);
+  
+  const daysSinceDisbursed = Math.floor((new Date().getTime() - dateDisbursed.getTime()) / (1000 * 60 * 60 * 24));
+  const daysRemaining = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  const progressPercent = Math.min((daysSinceDisbursed / (loanTerm * 30)) * 100, 100);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+      <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <span className="w-1 h-5 bg-indigo-600 rounded"></span>
+        Timeline
+      </h3>
+
+      <div className="space-y-3">
+        {/* Key Dates - 2x2 Grid */}
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Disbursed</p>
+            <p className="font-semibold text-gray-900">{new Date(loan.dateDisbursed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Maturity</p>
+            <p className="font-semibold text-gray-900">{dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Term</p>
+            <p className="font-semibold text-gray-900">{loanTerm} mo</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 font-medium mb-0.5">Remaining</p>
+            <p className={`font-bold ${daysRemaining > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {daysRemaining > 0 ? `${daysRemaining}d` : 'Overdue'}
+            </p>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div>
+          <div className="flex justify-between items-center mb-1">
+            <p className="text-xs text-gray-600 font-medium">Progress</p>
+            <p className="text-xs font-bold text-gray-700">{progressPercent.toFixed(0)}%</p>
+          </div>
+          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-indigo-500 rounded-full" style={{ width: `${progressPercent}%` }}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ------------------- Payment Tracker -------------------
 const PaymentTrackerCard = ({ collection, isOpenTerm }: { collection: any; isOpenTerm: boolean }) => {
@@ -354,14 +460,27 @@ const PaymentTrackerCard = ({ collection, isOpenTerm }: { collection: any; isOpe
 };
 
 const PaymentTrackerCards = ({ collections, t1, isOpenTerm }: { collections: any[]; t1: any; isOpenTerm: boolean }) => {
+  const [expanded, setExpanded] = useState(false);
+  
   if (!collections || collections.length === 0)
     return <p className="text-center py-6 text-gray-500 text-sm">{t1.t18}</p>;
 
+  const visibleCollections = expanded ? collections : collections.slice(0, 3);
+  const hasMore = collections.length > 3;
+
   return (
     <div className="flex flex-col">
-      {collections.map((c) => (
+      {visibleCollections.map((c) => (
         <PaymentTrackerCard key={c.referenceNumber} collection={c} isOpenTerm={isOpenTerm} />
       ))}
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="mt-3 w-full py-2 px-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg text-sm transition-colors"
+        >
+          {expanded ? 'Show Less' : `Show More (${collections.length - 3} more)`}
+        </button>
+      )}
     </div>
   );
 };
@@ -528,9 +647,73 @@ export default function LoansDetailClient({ loanId }: LoansDetailClientProps) {
         <ErrorModal isOpen={showWarning} message={warningMsg} onClose={() => setShowWarning(false)} />
 
         {/* Main Content */}
-  <div className="mx-auto max-w-7xl px-4 space-y-8">
-          {/* Progress Cards - Two Column Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="mx-auto max-w-7xl px-4 space-y-4">
+          {/* TIMELINE + DETAILS - Combined Box */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+            <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+              Details
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {/* Disbursed */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">Disbursed</p>
+                <p className="font-semibold text-gray-900 text-sm">{new Date(loan.dateDisbursed).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+              </div>
+              
+              {/* Maturity */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">Maturity</p>
+                <p className="font-semibold text-gray-900 text-sm">{(() => { const d = new Date(loan.dateDisbursed); d.setMonth(d.getMonth() + (loan.appLoanTerms || 0)); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); })()}</p>
+              </div>
+              
+              {/* Term */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">Term</p>
+                <p className="font-semibold text-gray-900 text-sm">{loan.appLoanTerms || 0} mo</p>
+              </div>
+              
+              {/* Remaining */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">Remaining</p>
+                <p className={`font-bold text-sm ${(() => { const dueDate = new Date(loan.dateDisbursed); dueDate.setMonth(dueDate.getMonth() + (loan.appLoanTerms || 0)); const daysRemaining = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); return daysRemaining > 0 ? 'text-green-600' : 'text-red-600'; })()}`}>
+                  {(() => { const dueDate = new Date(loan.dateDisbursed); dueDate.setMonth(dueDate.getMonth() + (loan.appLoanTerms || 0)); const daysRemaining = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); return daysRemaining > 0 ? `${daysRemaining}d` : 'Overdue'; })()}
+                </p>
+              </div>
+              
+              {/* Loan ID */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">{t1.t21}</p>
+                <p className="font-semibold text-gray-900 text-sm">{loan.loanId}</p>
+              </div>
+
+              {/* Amount */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">{t1.t22}</p>
+                <p className="font-semibold text-gray-900 text-sm">₱{Number(loan.appLoanAmount).toLocaleString()}</p>
+              </div>
+
+              {/* Type */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">{t1.t23}</p>
+                <p className="font-semibold text-gray-900 text-sm">{loan.loanType}</p>
+              </div>
+
+              {/* Interest Rate */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">{t1.t25}</p>
+                <p className="font-semibold text-gray-900 text-sm">{loan.appInterestRate ?? '—'}%</p>
+              </div>
+
+              {/* Agent */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-1">{language === 'en' ? 'Agent' : 'Ahente'}</p>
+                <p className="font-semibold text-gray-900 text-sm">{(loan as any).appAgent?.name || '—'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* TOP METRICS: Credit Score + Payment Progress */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <CreditScoreCard creditScore={loan.creditScore || 0} showTip={false} />
             <PaymentProgressCard
               paidAmount={loan.currentLoan?.paidAmount ?? 0}
@@ -542,40 +725,27 @@ export default function LoansDetailClient({ loanId }: LoansDetailClientProps) {
             />
           </div>
 
-          {/* Delinquency Status Card */}
+          {/* RISK ASSESSMENT + PERFORMANCE ANALYSIS */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <RiskAssessmentCard loan={loan} collections={collections} creditScore={loan.creditScore || 0} />
+            <LoanPerformanceCard 
+              collections={collections} 
+              loanType={loan.loanType}
+              appLoanAmount={Number(loan.appLoanAmount) || 0}
+              appTotalPayable={Number(loan.appTotalPayable) || 0}
+            />
+          </div>
+
+          {/* DELINQUENCY STATUS CARD */}
           <DelinquencyCard collections={collections} />
 
-          {/* Loan Details + Payment Tracker - Full Width with 4 Col Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Loan Details - Left Panel */}
-            <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-200 p-8 hover:shadow-md transition-all">
-              <h2 className="text-lg font-bold text-gray-900 mb-8 flex items-center gap-2">
-                <span className="w-1 h-6 bg-red-600 rounded"></span>
-                {t1.t16}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-6">
-                <Info label={t1.t21} value={loan.loanId} />
-                <Info label={t1.t22} value={`₱${Number(loan.appLoanAmount).toLocaleString()}`} />
-                <Info label={t1.t23} value={loan.loanType} />
-                <Info label={t1.t24} value={`${loan.appLoanTerms ?? '—'} months`} />
-                <Info label={t1.t25} value={`${loan.appInterestRate ?? '—'}%`} />
-                <Info label={t1.t26} value={formatDateTime(loan.dateDisbursed)} />
-                <div className="sm:col-span-2">
-                  <Info label={language === 'en' ? 'Assigned Agent' : 'Itinalagang Ahente'} value={(loan as any).appAgent?.name || '—'} />
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Tracker - Right Panel */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-200 p-8 h-auto lg:h-[550px] overflow-y-auto">
-                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 sticky top-0 bg-white pb-4 z-10">
-                  <span className="w-1 h-6 bg-red-600 rounded"></span>
-                  {t1.t17}
-                </h2>
-                <PaymentTrackerCards collections={collections} t1={t1} isOpenTerm={isOpenTerm} />
-              </div>
-            </div>
+          {/* PAYMENT TRACKER - Full Width */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+            <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="w-1 h-5 bg-red-600 rounded"></span>
+              {t1.t17}
+            </h2>
+            <PaymentTrackerCards collections={collections} t1={t1} isOpenTerm={isOpenTerm} />
           </div>
         </div>
       </div>

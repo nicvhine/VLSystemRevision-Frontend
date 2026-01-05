@@ -35,13 +35,13 @@ function PasswordInput({
         autoComplete="new-password"
         data-lpignore="true"
         data-1p-ignore="true"
-        className={`bg-white border text-sm border-gray-300 rounded-md p-2.5 ${showToggle ? 'pr-16' : 'pr-2.5'} focus:ring-1 focus:ring-red-600 focus:border-red-600 outline-none transition w-full`}
+        className={`bg-gray-50 border border-gray-300 text-sm rounded-lg p-3 ${showToggle ? 'pr-12' : 'pr-3'} focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition placeholder:text-gray-400 hover:border-gray-400 w-full`}
       />
       {showToggle && (
         <button
           type="button"
           onClick={() => setShow(!show)}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 text-xs z-10 cursor-pointer"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-700 text-xs z-10 cursor-pointer font-medium"
           aria-label={show ? 'Hide password' : 'Show password'}
         >
           {show ? auth.hide : auth.show}
@@ -53,6 +53,12 @@ function PasswordInput({
 
 export default function ProfileSettingsPanel({
   username,
+  editingUsername,
+  setEditingUsername,
+  usernameError,
+  setUsernameError,
+  isEditing,
+  setIsEditing,
   email,
   phoneNumber,
   editingEmail,
@@ -87,20 +93,35 @@ export default function ProfileSettingsPanel({
   verifySmsCode,
   emailVerified,
   setIsEditingPasswordField,
+  showSuccessModal,
+  setShowSuccessModal,
+  showErrorModal,
+  setShowErrorModal,
+  showConfirm,
+  setShowConfirm,
 }: ProfileEditingProps) {
-  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [language, setLanguage] = useState<'en' | 'ceb'>('en');
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpVisible, setOtpVisible] = useState(false);
   const [otpAnimateIn, setOtpAnimateIn] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [otpType, setOtpType] = useState<'email' | 'sms' | null>(null);
+  const [sendingCode, setSendingCode] = useState(false);
   const [modalMsg, setModalMsg] = useState('');
   const router = useRouter();
-  const [sendingCode, setSendingCode] = useState(false);
-  const [otpType, setOtpType] = useState<'email' | 'sms' | null>(null);
+  const [currentUsername, setCurrentUsername] = useState('');
+  const [currentEmail, setCurrentEmail] = useState('');
+  const [currentPhone, setCurrentPhone] = useState('');
+
+  // Get current values from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUsername(localStorage.getItem('username') || username);
+      setCurrentEmail(localStorage.getItem('email') || email);
+      setCurrentPhone(localStorage.getItem('phoneNumber') || phoneNumber);
+    }
+  }, [username, email, phoneNumber]);
 
   // Initialize language
   useEffect(() => {
@@ -167,22 +188,37 @@ export default function ProfileSettingsPanel({
       return;
     }
     try {
+      setLoading(true);
       const ok = await verifyEmailCode();
-      if (ok) {
-        setShowOtpModal(false);
-        setModalMsg('Email verified and updated successfully.');
-        setShowSuccessModal(true);
-        setEnteredEmailCode('');
-        setEmailVerificationSent(false);
-        // Clear the input field so it shows the new email as placeholder
-        setEditingEmail('');
-      } else {
-        setModalMsg(emailError || 'Failed to verify the code.');
+      
+      if (!ok) {
+        // Verification failed - show error modal
+        setModalMsg(emailError || 'Incorrect verification code. Please try again.');
         setShowErrorModal(true);
+        return;
       }
-    } catch {
+
+      // Verification successful - continue with other updates
+      setShowOtpModal(false);
+      setEnteredEmailCode('');
+      setEmailVerificationSent(false);
+      setEditingEmail('');
+      
+      // Continue with other updates (username, phone, password)
+      await handleAccountSettingsUpdate();
+      
+      setModalMsg('✓ All changes saved successfully!');
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        setIsEditing?.(false);
+      }, 2000);
+    } catch (error) {
+      console.error('OTP verification error:', error);
       setModalMsg('An error occurred while verifying OTP.');
       setShowErrorModal(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -193,222 +229,266 @@ export default function ProfileSettingsPanel({
     }
   
     try {
+      setLoading(true);
       await verifySmsCode(); 
+      
       setShowOtpModal(false);
-      setModalMsg('Phone number verified and updated successfully.');
-      setShowSuccessModal(true);
       setEnteredSmsCode('');
       setSmsVerificationSent(false);
       setEditingPhone('');
-    } catch {
+      
+      // Continue with other updates (username, email, password)
+      await handleAccountSettingsUpdate();
+      
+      setModalMsg('✓ All changes saved successfully!');
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        setIsEditing?.(false);
+      }, 2000);
+    } catch (error) {
+      console.error('SMS verification error:', error);
       setModalMsg(phoneError || 'Failed to verify the code.');
       setShowErrorModal(true);
+    } finally {
+      setLoading(false);
     }
+
   };
   
   const handleSaveWithConfirm = async () => {
     setShowConfirm(false);
     setLoading(true);
-    await handleAccountSettingsUpdate();
-    setLoading(false);
-    // Show success modal and auto-close after 5 seconds
-    setModalMsg('Password updated successfully!');
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-    }, 5000);
+    setModalMsg('');
+    try {
+      await handleAccountSettingsUpdate();
+      setModalMsg('✓ All changes saved successfully!');
+      setShowSuccessModal(true);
+      setShowOtpModal(false);
+      setOtpVisible(false);
+      setTimeout(() => setShowSuccessModal(false), 3000);
+    } catch (error) {
+      setModalMsg('Failed to save changes. Please try again.');
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
 
   return (
     <>
-      <div className="max-w-2xl mx-auto px-4 py-3 space-y-2">
+      <div className="space-y-6">
 
-        {/* USERNAME */}
-        <div className="pb-2 border-b border-gray-200">
-          <p className="text-xs font-medium text-gray-500 mb-1">Username</p>
-          <p className="text-gray-900 text-sm">{username}</p>
-        </div>
-
-        {/* EMAIL */}
-        <div className="pb-2 border-b border-gray-200">
-          <p className="text-xs font-medium text-gray-500 mb-1">Email</p>
-          <div className="min-h-[0.75rem]">
-            {emailError && <p className="text-xs text-red-500 mb-1">{emailError}</p>}
+        {/* USERNAME SECTION */}
+        <div className="pb-6 border-b border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Username</span>
           </div>
-          <div className="flex flex-col">
-          <input
-            type="email"
-            value={editingEmail}
-            onChange={(e) => {
-              const value = e.target.value;
-              setEditingEmail(value);
-
-              // Clear previous error
-              setEmailError('');
-
-              // Same email as current
-              if (
-                value &&
-                email &&
-                value.trim().toLowerCase() === email.trim().toLowerCase()
-              ) {
-                setEmailError("Entered email is what you're currently using.");
-                return;
-              }
-
-              // Validate email format
-              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              if (value && !emailRegex.test(value)) {
-                setEmailError('Please enter a valid email address.');
-              }
-            }}
-            placeholder={email || 'Enter email address'}
-            className="bg-white border border-gray-300 rounded-md p-2.5 focus:ring-1 focus:ring-red-600 focus:border-red-600 outline-none transition text-sm placeholder:text-gray-500"
-          />
-            <div className="min-h-[1rem]">
-              {editingEmail.trim() !== '' && editingEmail.toLowerCase() !== email.toLowerCase() && !emailError && (
-                <button
-                  disabled={sendingCode}
-                  onClick={async () => {
-                    setOtpType('email');
-                    setEmailError('');
-                    setSendingCode(true);
-                    try { await sendEmailCode(); } finally { setSendingCode(false); }
-                  }}
-                  className={`text-red-600 text-xs font-medium hover:text-red-700 transition disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  {sendingCode ? 'Sending…' : 'Send Verification Code'}
-                </button>
-              )}
-            </div>
+          <div className="flex flex-col gap-3">
+            <input
+              type="text"
+              value={editingUsername}
+              onChange={(e) => {
+                const value = e.target.value;
+                setEditingUsername(value);
+                setUsernameError('');
+                
+                // Check if it's the same as current username
+                if (value && value.toLowerCase() === currentUsername.toLowerCase()) {
+                  setUsernameError("Entered username is your current username.");
+                  return;
+                }
+                
+                // Username validation
+                if (value && (value.length < 3 || value.length > 20)) {
+                  setUsernameError('Username must be between 3 and 20 characters.');
+                  return;
+                }
+                
+                if (value && !/^[a-zA-Z0-9_-]+$/.test(value)) {
+                  setUsernameError('Username can only contain letters, numbers, underscores, and hyphens.');
+                }
+              }}
+              placeholder={currentUsername || 'Enter new username'}
+              disabled={!isEditing}
+              className={`rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition text-sm placeholder:text-gray-400 ${
+                isEditing
+                  ? 'bg-gray-50 border border-gray-300 hover:border-gray-400'
+                  : 'bg-gray-100 border border-gray-200 cursor-not-allowed'
+              }`}
+            />
+            {usernameError && <p className="text-xs text-red-500 font-medium">⚠ {usernameError}</p>}
           </div>
         </div>
 
-         {/* PHONE */}
-        <div className="pb-2 border-b border-gray-200">
-          <p className="text-xs font-medium text-gray-500 mb-1">Phone</p>
-          <div className="min-h-[0.75rem]">
-            {phoneError && <p className="text-xs text-red-500 mb-1">{phoneError}</p>}
+        {/* EMAIL SECTION */}
+        <div className="pb-6 border-b border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email Address</span>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-3">
+            <input
+              type="email"
+              value={editingEmail}
+              onChange={(e) => {
+                const value = e.target.value;
+                setEditingEmail(value);
+                setEmailError('');
+                if (
+                  value &&
+                  currentEmail &&
+                  value.trim().toLowerCase() === currentEmail.trim().toLowerCase()
+                ) {
+                  setEmailError("Entered email is what you're currently using.");
+                  return;
+                }
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (value && !emailRegex.test(value)) {
+                  setEmailError('Please enter a valid email address.');
+                }
+              }}
+              placeholder={currentEmail || 'Enter email address'}
+              disabled={!isEditing}
+              className={`rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition text-sm placeholder:text-gray-400 ${
+                isEditing
+                  ? 'bg-gray-50 border border-gray-300 hover:border-gray-400'
+                  : 'bg-gray-100 border border-gray-200 cursor-not-allowed'
+              }`}
+            />
+            {emailError && <p className="text-xs text-red-500 font-medium">⚠ {emailError}</p>}
+          </div>
+        </div>
+
+         {/* PHONE SECTION */}
+        <div className="pb-6 border-b border-gray-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone Number</span>
+          </div>
+          <div className="flex flex-col gap-3">
             <input
               type="tel"
               value={editingPhone}
               onChange={(e) => {
                 const value = e.target.value;
-                // Only allow numbers
                 if (value && !/^\d*$/.test(value)) return;
                 setEditingPhone(value);
-
-                 // Same number as current
-                  if (
-                    value &&
-                    phoneNumber &&
-                    value.trim().toLowerCase() === phoneNumber.trim().toLowerCase()
-                  ) {
-                    setPhoneError("Entered phone number is what you're currently using.");
-                    return;
-                  }
-
-                // Clear error when user starts typing
+                if (
+                  value &&
+                  currentPhone &&
+                  value.trim().toLowerCase() === currentPhone.trim().toLowerCase()
+                ) {
+                  setPhoneError("Entered phone number is what you're currently using.");
+                  return;
+                }
                 if (phoneError) setPhoneError('');
-                // Validate phone format
                 if (value && (!value.startsWith('09') || value.length !== 11)) {
                   setPhoneError('Phone number must start with 09 and be exactly 11 digits.');
                 }
               }}
-              placeholder={phoneNumber}
+              placeholder={currentPhone}
               maxLength={11}
-              className="bg-white border border-gray-300 text-sm rounded-md p-2.5 focus:ring-1 focus:ring-red-600 focus:border-red-600 outline-none transition placeholder:text-gray-500"
+              disabled={!isEditing}
+              className={`text-sm rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition placeholder:text-gray-400 ${
+                isEditing
+                  ? 'bg-gray-50 border border-gray-300 hover:border-gray-400'
+                  : 'bg-gray-100 border border-gray-200 cursor-not-allowed'
+              }`}
             />
-            <div className="min-h-[1rem]">
-              {editingPhone.trim() !== '' && editingPhone !== phoneNumber && !phoneError && (
-                <button
-                  disabled={sendingCode}
-                  onClick={async () => {
-                    setOtpType('sms');
-                    setPhoneError('');
-                    setSendingCode(true);
-                    try { await sendSmsCode(); } finally { setSendingCode(false); }
-                  }}
-                  className={`text-red-600 text-xs font-medium hover:text-red-700 transition disabled:cursor-not-allowed disabled:opacity-50`}
-                >
-                  {sendingCode ? 'Sending…' : 'Send Verification Code'}
-                </button>
-              )}
-            </div>
+            {phoneError && <p className="text-xs text-red-500 font-medium">⚠ {phoneError}</p>}
           </div>
         </div>
         
-        {/* PASSWORD */}
-        <div className="pb-2">
-  <p className="text-xs font-medium text-gray-500 mb-1">Password</p>
-  <div className="min-h-[0.75rem]">
-    {passwordError && <p className="text-xs text-red-500 mb-1">{passwordError}</p>}
-  </div>
-  <div className="flex flex-col gap-2">
-    <PasswordInput
-    label="Current Password"
-    value={currentPassword}
-    onChange={(v) => {
-      setCurrentPassword(v);
-      setIsEditingPasswordField(true);
-      if (passwordError) setPasswordError('');
-    }}
-    language={language}
-    showToggle={true}
-  />
-    <PasswordInput
-    label="New Password"
-    value={newPassword}
-    onChange={(v) => {
-      setNewPassword(v);
-      setIsEditingPasswordField(true);
-      if (passwordError) setPasswordError('');
-      
-      if (v) {
-        // Check if new password is same as current password
-        if (v === currentPassword) {
-          setPasswordError('New password must be different from current password.');
-          return;
-        }
-        // Validate password strength
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-        if (!passwordRegex.test(v)) {
-          setPasswordError('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.');
-        }
-      }
-    }}
-    language={language}
-    showToggle={true}
-  />
-  <PasswordInput
-    label="Confirm Password"
-    value={confirmPassword}
-    onChange={(v) => {
-      setConfirmPassword(v);
-      setIsEditingPasswordField(true);
-      if (passwordError) setPasswordError('');
-      // Check if passwords match
-      if (v && newPassword && v !== newPassword) {
-        setPasswordError('Passwords do not match.');
-      }
-    }}
-    language={language}
-    showToggle={true}
-  />
-          {/* Always render button, disable if not all fields filled */}
-          <div className="flex justify-end mt-1.5">
-          <button
-            disabled={loading || !currentPassword || !newPassword || !confirmPassword}
-            onClick={() => setShowConfirm(true)}
-            className="bg-red-600 text-white text-xs font-medium rounded-md px-6 py-2.5 hover:bg-red-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Saving…' : 'Save Changes'}
-          </button>
+        {/* PASSWORD SECTION */}
+        {isEditing && (
+          <div className="pb-2">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Password</span>
+            </div>
+            <div className="min-h-[1.5rem] mb-2">
+              {passwordError && <p className="text-xs text-red-500 font-medium flex items-center gap-1">⚠ {passwordError}</p>}
+            </div>
+            <div className="flex flex-col gap-3">
+              <PasswordInput
+                label="Current Password"
+                value={currentPassword}
+                onChange={(v) => {
+                  setCurrentPassword(v);
+                  setIsEditingPasswordField(true);
+                  if (passwordError) setPasswordError('');
+                }}
+                language={language}
+                showToggle={true}
+              />
+              <PasswordInput
+                label="New Password"
+                value={newPassword}
+                onChange={(v) => {
+                  setNewPassword(v);
+                  setIsEditingPasswordField(true);
+                  if (passwordError) setPasswordError('');
+                  
+                  if (v) {
+                    // Check if new password is same as current password
+                    if (v === currentPassword) {
+                      setPasswordError('New password must be different from current password.');
+                      return;
+                    }
+                    // Validate password strength
+                    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+                    if (!passwordRegex.test(v)) {
+                      setPasswordError('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.');
+                    }
+                  }
+                }}
+                language={language}
+                showToggle={true}
+              />
+              <PasswordInput
+                label="Confirm Password"
+                value={confirmPassword}
+                onChange={(v) => {
+                  setConfirmPassword(v);
+                  setIsEditingPasswordField(true);
+                  if (passwordError) setPasswordError('');
+                  if (v && newPassword && v !== newPassword) {
+                    setPasswordError('Passwords do not match.');
+                  }
+                }}
+                language={language}
+                showToggle={true}
+              />
+              {/* Save/Cancel Buttons */}
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                <button
+                  disabled={loading}
+                  onClick={() => setShowConfirm(true)}
+                  className="bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-semibold rounded-lg px-8 py-3 hover:shadow-lg transition-all disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed disabled:shadow-none"
+                >
+                  {loading ? '⟳ Saving…' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditing?.(false);
+                    setEditingUsername('');
+                    setEditingEmail('');
+                    setEditingPhone('');
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                    setUsernameError('');
+                    setEmailError('');
+                    setPhoneError('');
+                    setPasswordError('');
+                  }}
+                  className="px-6 py-3 bg-gray-300 text-gray-900 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <ConfirmModal
@@ -417,7 +497,6 @@ export default function ProfileSettingsPanel({
           onConfirm={() => { void handleSaveWithConfirm(); }}
           onCancel={() => setShowConfirm(false)}
         />
-      </div>
 
       {/* OTP Modal */}
       {otpVisible &&

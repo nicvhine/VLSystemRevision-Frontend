@@ -50,6 +50,7 @@ export async function loginHandler({
       const data = await borrowerRes.json();
       localStorage.setItem("token", data.token || "");
       localStorage.setItem("fullName", data.fullName || data.name || username);
+      localStorage.setItem("username", data.username);
       localStorage.setItem("email", data.email);
       localStorage.setItem("phoneNumber", data.phoneNumber);
       localStorage.setItem("role", "borrower");

@@ -189,11 +189,15 @@ export default function LoanHistoryPage() {
                   return (
                     <div
                       key={loan.loanId}
-                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                      className={`rounded-2xl shadow-sm border overflow-hidden ${
+                        loan.status === 'Active'
+                          ? 'bg-emerald-50 border-emerald-200'
+                          : 'bg-white border-gray-100'
+                      }`}
                     >
                       <div
                         className={`p-5 flex items-start justify-between cursor-pointer ${
-                          isExpanded ? 'bg-gray-50' : ''
+                          isExpanded ? 'bg-gray-50/50' : ''
                         }`}
                         onClick={async () => {
                           if (isExpanded) {
@@ -213,20 +217,6 @@ export default function LoanHistoryPage() {
                           <p className="text-xs text-gray-500 mt-1">
                             {loan.dateDisbursed ? formatDate(loan.dateDisbursed) : '-'}
                           </p>
-                        </div>
-
-                        <div className="flex items-center space-x-4">
-                          <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                              loan.status === 'Active'
-                                ? 'bg-green-100 text-green-800'
-                                : loan.status === 'Closed' 
-                                ? 'bg-gray-100 text-gray-700'
-                                : 'bg-blue-50 text-blue-700'
-                            } border`}
-                          >
-                            {loan.status}
-                          </span>
                         </div>
                       </div>
 

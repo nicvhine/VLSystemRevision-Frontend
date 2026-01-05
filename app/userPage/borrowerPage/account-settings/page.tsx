@@ -13,7 +13,7 @@ export default function AccountSettingsPage() {
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(true); // Always in edit mode on this page
+  const [isEditing, setIsEditing] = useState(false); // Toggle edit mode
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [language, setLanguage] = useState<'en' | 'ceb'>('en');
 
@@ -101,6 +101,16 @@ export default function AccountSettingsPage() {
     smsVerificationSent,
     setSmsVerificationSent,
     emailVerified,
+    editingUsername,
+    setEditingUsername,
+    usernameError,
+    setUsernameError,
+    showSuccessModal,
+    setShowSuccessModal,
+    showErrorModal,
+    setShowErrorModal,
+    showConfirm,
+    setShowConfirm,
   } = useProfileDropdownLogic(setIsEditing, setShowOtpModal);
 
   const t = translations.navbarTranslation[language];
@@ -114,24 +124,41 @@ export default function AccountSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 hover:bg-white rounded-lg transition shadow-sm hover:shadow-md"
             aria-label="Go back"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-700" />
+            <ArrowLeft className="w-5 h-5 text-red-600" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+            <p className="text-sm text-gray-600 mt-1">Manage your account information and security</p>
+          </div>
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all shadow-md hover:shadow-lg"
+            >
+              Edit
+            </button>
+          )}
         </div>
 
         {/* Settings Panel */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
           <ProfileSettingsPanel
             username={username}
+            editingUsername={editingUsername}
+            setEditingUsername={setEditingUsername}
+            usernameError={usernameError}
+            setUsernameError={setUsernameError}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
             email={email}
             phoneNumber={phoneNumber}
             editingEmail={editingEmail}
@@ -172,8 +199,20 @@ export default function AccountSettingsPage() {
             setEmailVerificationSent={setEmailVerificationSent}
             emailVerified={emailVerified}
             setSmsVerificationSent={setSmsVerificationSent}
+            showSuccessModal={showSuccessModal}
+            setShowSuccessModal={setShowSuccessModal}
+            showErrorModal={showErrorModal}
+            setShowErrorModal={setShowErrorModal}
+            showConfirm={showConfirm}
+            setShowConfirm={setShowConfirm}
           />
         </div>
+
+        {!isEditing && (
+          <div className="text-center mt-8 text-gray-600">
+            Click the Edit button above to modify your account settings.
+          </div>
+        )}
       </div>
     </div>
   );

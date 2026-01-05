@@ -1,5 +1,12 @@
 export interface ProfileEditingProps {
     username: string;
+    editingUsername: string;
+    setEditingUsername: (v: string) => void;
+    usernameError: string;
+    setUsernameError: (v: string) => void;
+    isEditing?: boolean;
+    setIsEditing?: (v: boolean) => void;
+    
     email: string;
     phoneNumber: string;
 
@@ -50,7 +57,13 @@ export interface ProfileEditingProps {
     sendSmsCode: () => Promise<void>;
     verifySmsCode: () => void;
 
-
-    emailVerified: boolean;  
+    emailVerified: boolean;
+    
+    showSuccessModal: boolean;
+    setShowSuccessModal: (v: boolean) => void;
+    showErrorModal: boolean;
+    setShowErrorModal: (v: boolean) => void;
+    showConfirm: boolean;
+    setShowConfirm: (v: boolean) => void;
   }
   
