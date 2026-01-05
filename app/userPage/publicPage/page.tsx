@@ -139,7 +139,7 @@ export default function LandingPage() {
       {/* Modals: login, simulator, tracker, privacy, terms */}
       <LoginModal
         isOpen={isLoginOpen}
-        onClose={() => openLogin(false)}
+        onCloseAction={() => openLogin(false)}
         language={language}
       />
       <SimulatorModal

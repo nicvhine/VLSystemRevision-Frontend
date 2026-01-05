@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import emailjs from 'emailjs-com';
 import ErrorModal from '@/app/commonComponents/modals/errorModal';

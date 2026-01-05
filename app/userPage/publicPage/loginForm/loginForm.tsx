@@ -1,6 +1,5 @@
-'use client';
-
 import { FormEvent, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { loginHandler } from './loginHandlers';
 import ErrorModal from '@/app/commonComponents/modals/errorModal';
 import { ButtonContentLoading } from '@/app/commonComponents/utils/loading';
@@ -9,7 +8,6 @@ import { AlertTriangle, Eye, EyeOff, Lock, User } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
-  router: any;
   setShowForgotModal: React.Dispatch<React.SetStateAction<boolean>>;
   setForgotRole: React.Dispatch<React.SetStateAction<'borrower' | 'staff' | '' | null>>;
   setShowSMSModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -20,7 +18,6 @@ interface Props {
 
 export default function LoginFormWithSMS({
   onClose,
-  router,
   setShowForgotModal,
   setForgotRole,
   setOtpRole,
@@ -28,6 +25,7 @@ export default function LoginFormWithSMS({
   setShowRegisterModal,
   language = 'en',
 }: Props) {
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

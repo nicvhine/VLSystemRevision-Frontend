@@ -2,9 +2,10 @@ import { useRouter } from 'next/navigation';
 
 interface DeniedApplicationProps {
   latestApplication: any;
+  cooldownSeconds?: number;
 }
 
-const DeniedApplication = ({ latestApplication }: DeniedApplicationProps) => {
+const DeniedApplication = ({ latestApplication, cooldownSeconds }: DeniedApplicationProps) => {
   const router = useRouter();
 
   return (

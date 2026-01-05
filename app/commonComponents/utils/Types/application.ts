@@ -51,6 +51,9 @@ export interface Application {
   appServiceFee: number;
   denialReason: string;
   hasServiceFee: string;
+  withdrawalReason?: string;
+  pendingPrincipalChange?: boolean;
+  pendingWithdrawalRequest?: boolean;
 }
 
 export interface ApplicationCardProps {

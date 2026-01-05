@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import LoginForm from './loginForm';
@@ -9,11 +7,11 @@ import OTPModal from './loginOtpModal';
 
 interface LoginModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onCloseAction: () => void;
   language?: 'en' | 'ceb';
 }
 
-export default function LoginModal({ isOpen, onClose, language = 'en' }: LoginModalProps) {
+export default function LoginModal({ isOpen, onCloseAction, language = 'en' }: LoginModalProps) {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false); // 👈 NEW
   const [forgotRole, setForgotRole] = useState<'borrower' | 'staff' | '' | null>(null);
@@ -72,7 +70,7 @@ export default function LoginModal({ isOpen, onClose, language = 'en' }: LoginMo
               {/* Right panel - content */}
               <div className="p-6 md:p-8 bg-white relative max-h-[80vh] overflow-y-auto">
                 <button
-                  onClick={onClose}
+                  onClick={onCloseAction}
                   aria-label="Close"
                   className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
                 >
@@ -83,16 +81,14 @@ export default function LoginModal({ isOpen, onClose, language = 'en' }: LoginMo
                 {showRegisterModal ? (
                   /* REGISTER */
                   <RegisterForm
-                    onClose={onClose}
-                    router={router}
+                    onClose={onCloseAction}
                     switchToLogin={() => setShowRegisterModal(false)}
                     language={language}
                   />
                 ) : (
                   /* LOGIN */
                   <LoginForm
-                    onClose={onClose}
-                    router={router}
+                    onClose={onCloseAction}
                     setShowForgotModal={setShowForgotModal}
                     setForgotRole={setForgotRole}
                     setShowSMSModal={setShowSMSModal}
@@ -112,7 +108,7 @@ export default function LoginModal({ isOpen, onClose, language = 'en' }: LoginMo
         isVisible={showSMSModal}
         onClose={() => {
           setShowSMSModal(false);
-          onClose();
+          onCloseAction();
         }}
         router={router}
         otpRole={otpRole}

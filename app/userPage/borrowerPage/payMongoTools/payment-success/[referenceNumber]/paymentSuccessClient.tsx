@@ -17,36 +17,35 @@ export default function PaymentSuccessClient({ referenceNumber }: Props) {
   const [redirectIn, setRedirectIn] = useState(3);
   const processingRef = useRef(false); // Prevent multiple concurrent requests
 
-  useEffect(() => {
+  const finalize = useCallback(async () => {
     if (processingRef.current) return; // Only run once
+    
+    processingRef.current = true; // Mark as processing immediately
+    setPhase("processing");
+    setMsg("Finalizing your payment... Please wait.");
 
-    const finalize = async () => {
-      processingRef.current = true; // Mark as processing immediately
-      setPhase("processing");
-      setMsg("Finalizing your payment... Please wait.");
+    try {
+      const token = localStorage.getItem("token");
 
-      try {
-        const token = localStorage.getItem("token");
+      console.log(`[PAYMENT_SUCCESS_CALL] Making request to finalize payment for ${referenceNumber}`);
 
-        console.log(`[PAYMENT_SUCCESS_CALL] Making request to finalize payment for ${referenceNumber}`);
+      const res = await fetch(`${BASE_URL}/payments/${referenceNumber}/paymongo/success`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        const res = await fetch(`${BASE_URL}/payments/${referenceNumber}/paymongo/success`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      const result = await res.json().catch(() => undefined);
 
-        const result = await res.json().catch(() => undefined);
+      if (!res.ok) {
+        console.error("[PAYMENT_ERROR] Response not OK:", { status: res.status, result });
+        throw new Error(result?.error || result?.message || "Failed to finalize payment");
+      }
 
-        if (!res.ok) {
-          console.error("[PAYMENT_ERROR] Response not OK:", { status: res.status, result });
-          throw new Error(result?.error || result?.message || "Failed to finalize payment");
-        }
-
-        setPhase("success");
-        setMsg("Payment successful. Redirecting you back to your dashboard...");
+      setPhase("success");
+      setMsg("Payment successful. Redirecting you back to your dashboard...");
 
         // Extract payment data and store in localStorage to show receipt on dashboard
         if (result && result.paymentLogs && result.paymentLogs.length > 0) {
@@ -68,11 +67,13 @@ export default function PaymentSuccessClient({ referenceNumber }: Props) {
         console.error("[PAYMENT_ERROR]", err);
         setPhase("error");
         setMsg(err instanceof Error ? err.message : "We couldn't finalize your payment. You can retry or go back to your dashboard.");
+        processingRef.current = false; // Reset on error so retry works
       }
-    };
-
-    finalize();
   }, [referenceNumber]);
+
+  useEffect(() => {
+    finalize();
+  }, [finalize]);
 
   useEffect(() => {
     if (phase !== "success") return;

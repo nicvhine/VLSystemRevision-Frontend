@@ -365,7 +365,7 @@ export default function ApplicationDetailsPage() {
         {/* MAIN CONTENT */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Pending Withdrawal Request Card */}
-          {application?.pendingWithdrawalRequest && (
+          {(application as any)?.pendingWithdrawalRequest && (
           <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg shadow-sm overflow-hidden">
             <button
               onClick={() => setExpandWithdrawal(!expandWithdrawal)}
@@ -386,7 +386,7 @@ export default function ApplicationDetailsPage() {
 
             {expandWithdrawal && (
               <div className="px-5 pb-5 border-t border-orange-200 bg-white">
-                <p className="text-xs text-orange-800 mb-4 pt-3"><strong>Reason:</strong> {application?.withdrawalReason}</p>
+                <p className="text-xs text-orange-800 mb-4 pt-3"><strong>Reason:</strong> {(application as any)?.withdrawalReason}</p>
                 
                 {role === 'loan_officer' || role === 'loan officer' || role === 'manager' ? (
                   <div className="flex gap-2">

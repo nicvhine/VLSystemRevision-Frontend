@@ -10,7 +10,7 @@ export default function LoginPage() {
     <div>
       <LoginModal
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onCloseAction={() => setIsOpen(false)}
       />
     </div>
   );

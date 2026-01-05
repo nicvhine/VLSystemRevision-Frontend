@@ -93,7 +93,7 @@ export default function ApplicationPage() {
 
   return (
     <div className={isMobile ? "min-h-screen flex flex-col bg-white text-black" : "h-screen flex flex-col bg-white text-black"}>
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} language={language} />
+      <LoginModal isOpen={isLoginOpen} onCloseAction={() => setIsLoginOpen(false)} language={language} />
       <SimulatorModal isOpen={isCalculationOpen} onClose={() => setIsCalculationOpen(false)} language={language} />
 
       {/* Terms / Privacy Modals */}
