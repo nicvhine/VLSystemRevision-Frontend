@@ -103,21 +103,44 @@ export default function LoanHistoryPage() {
 
       const data = await res.json();
 
-      // Fetch payments (instead of collections)
+      // Fetch collections and payments together
       try {
+        const colRes = await fetch(`${BASE_URL}/collections/schedule/${borrowersId}/${loanId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const payRes = await fetch(`${BASE_URL}/payments/ledger/${loanId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        let collections = [];
+        let payments = [];
+
+        if (colRes.ok) {
+          const colData = await colRes.json();
+          collections = Array.isArray(colData) ? colData : [];
+        }
+
         if (payRes.ok) {
           const payData = await payRes.json();
-          // Expect backend returns { success: true, payments: [...] }
-          data.payments = Array.isArray(payData.payments) ? payData.payments : [];
-        } else {
-          console.warn('Could not fetch payments');
-          data.payments = [];
+          payments = Array.isArray(payData.payments) ? payData.payments : [];
         }
+
+        // Filter to show only Paid and Partial collections with their payment info
+        const paidCollections = collections.filter((c: any) => c.status === 'Paid' || c.status === 'Partial');
+        
+        // Map payment mode to each paid collection
+        data.payments = paidCollections.map((col: any) => {
+          // Find the payment(s) for this collection
+          const collectionPayments = payments.filter((p: any) => p.paidToCollection === col.collectionNumber || p.referenceNumber?.includes(col.referenceNumber));
+          const paymentMode = collectionPayments.length > 0 ? collectionPayments[0].mode : 'Unknown';
+          
+          return {
+            ...col,
+            paymentMode
+          };
+        });
       } catch (err) {
-        console.warn('Error fetching payments:', err);
+        console.warn('Error fetching collections and payments:', err);
         data.payments = [];
       }
 
@@ -273,30 +296,44 @@ export default function LoanHistoryPage() {
                                   {/* Payment Table */}
                                   <div>
                                     <p className="text-sm font-medium text-gray-700 mb-2">
-                                      Payment History
+                                      Paid Collections
                                     </p>
                                     {payments.length === 0 ? (
-                                      <p className="text-gray-500">{t.t12}</p>
+                                      <p className="text-gray-500">No collections paid yet</p>
                                     ) : (
                                       <div className="overflow-x-auto">
                                         <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
                                           <thead className="bg-white text-gray-700">
                                             <tr>
-                                              <th className="p-2 text-left">Date</th>
-                                              <th className="p-2 text-left">Reference Number</th>
-                                              <th className="p-2 text-left">{t.t14}</th>
-                                              <th className="p-2 text-left">Mode</th>
+                                              <th className="p-2 text-left">Collection Ref</th>
+                                              <th className="p-2 text-left">Due Date</th>
+                                              <th className="p-2 text-left">Amount</th>
+                                              <th className="p-2 text-left">Paid Amount</th>
+                                              <th className="p-2 text-left">Payment Mode</th>
+                                              <th className="p-2 text-left">Status</th>
                                             </tr>
                                           </thead>
                                           <tbody>
                                             {payments.map((p: any, idx: number) => (
                                               <tr key={p._id || idx} className="border-t border-gray-100">
-                                                <td className="p-2">{formatDate(p.datePaid)}</td>
+                                                <td className="p-2 font-mono text-xs">{p.referenceNumber}</td>
+                                                <td className="p-2">{formatDate(p.dueDate)}</td>
+                                                <td className="p-2">{formatCurrency(p.periodAmount ?? 0)}</td>
+                                                <td className="p-2 font-medium">{formatCurrency(p.paidAmount ?? 0)}</td>
                                                 <td className="p-2">
-                                                  {p.referenceNumber  }
+                                                  <span className="inline-block px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                    {p.paymentMode || 'Unknown'}
+                                                  </span>
                                                 </td>
-                                                <td className="p-2">{formatCurrency(p.amount ?? 0)}</td>
-                                                <td className="p-2">{p.mode}</td>
+                                                <td className="p-2">
+                                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                    p.status === 'Paid' 
+                                                      ? 'bg-green-100 text-green-800'
+                                                      : 'bg-yellow-100 text-yellow-800'
+                                                  }`}>
+                                                    {p.status}
+                                                  </span>
+                                                </td>
                                               </tr>
                                             ))}
                                           </tbody>

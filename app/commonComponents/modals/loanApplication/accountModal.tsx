@@ -213,10 +213,17 @@ export default forwardRef(function AccountModal({ a }: AccountModalProps = {}, r
         throw new Error(msg);
       }
 
-      // Generate new loan
+      // Generate new loan with collector assignment
       const loanResponse = await authFetch(
         `${BASE_URL}/loans/generate-loan/${selectedApp.applicationId}`,
-        { method: "POST" }
+        { 
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            assignedCollectorId: selectedCollectorId,
+            assignedCollectorName: selectedCollector?.name 
+          })
+        }
       );
       if (!loanResponse.ok) {
         let msg = "Failed to generate loan";

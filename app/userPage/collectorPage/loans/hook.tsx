@@ -43,7 +43,11 @@ export const useLoanList = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${BASE_URL}/loans`, {
+        const endpoint = role === 'collector' 
+          ? `${BASE_URL}/collections/collector/assigned-loans`
+          : `${BASE_URL}/loans`;
+        
+        const res = await fetch(endpoint, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
@@ -60,7 +64,7 @@ export const useLoanList = () => {
       }
     };
     fetchLoans();
-  }, []);
+  }, [role]);
 
   return { loans, role, language, loading, error };
 };
