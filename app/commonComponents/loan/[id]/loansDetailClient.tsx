@@ -208,6 +208,36 @@ const DelinquencyCard = ({ collections }: { collections: any[] }) => {
     severity === "low" ? "Low Delinquency" :
     severity === "medium" ? "Medium Delinquency" :
     "High Delinquency";
+
+  return (
+    <div className={`rounded-2xl p-4 border-2 ${severityColor}`}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-bold text-gray-900">Delinquency Status</h3>
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${badgeColor}`}>
+          {icon} {statusText}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <p className="text-xs text-gray-600 font-medium mb-0.5">Delinquent</p>
+          <p className="font-bold text-gray-900">{delinquentCount}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-600 font-medium mb-0.5">Total Unpaid</p>
+          <p className="font-bold text-gray-900">{totalUnpaid}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-600 font-medium mb-0.5">Oldest (Days)</p>
+          <p className="font-bold text-gray-900">{oldestDelinquentDays}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-600 font-medium mb-0.5">Amount</p>
+          <p className="font-bold text-gray-900">{formatCurrency(totalDelinquentAmount)}</p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // ------------------- Info Component -------------------
