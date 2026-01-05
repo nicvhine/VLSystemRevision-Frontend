@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ChevronLeft, Calendar, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { ChevronLeft, Calendar, CheckCircle, AlertCircle, Clock, ChevronDown, HelpCircle } from "lucide-react";
 import CustomAmountModal from "@/app/commonComponents/modals/payModal";
 import { formatDate, formatCurrency } from "@/app/commonComponents/utils/formatters";
 
@@ -27,6 +27,8 @@ export default function UpcomingBillsPage() {
   const [selectedCollection, setSelectedCollection] = useState<any | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [pendingRestructuring, setPendingRestructuring] = useState<any | null>(null);
+  const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
 
   // Calculate summary stats
   const totalAmount = collections.reduce((sum, c) => sum + Number(c.periodAmount ?? 0), 0);
@@ -69,6 +71,25 @@ export default function UpcomingBillsPage() {
         const data = await res.json();
         setLoan(data);
         setCollections(Array.isArray(data.collections) ? data.collections : []);
+
+        // Check for pending restructuring application
+        const borrowersId = localStorage.getItem("borrowersId");
+        if (borrowersId) {
+          const borrowerRes = await fetch(`${BASE_URL}/borrowers/${borrowersId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (borrowerRes.ok) {
+            const borrowerData = await borrowerRes.json();
+            if (borrowerData.allApplications && Array.isArray(borrowerData.allApplications)) {
+              const pending = borrowerData.allApplications.find((app: any) => 
+                ['Applied', 'Pending', 'Cleared', 'Approved', 'Disbursed'].includes(app.status)
+              );
+              if (pending) {
+                setPendingRestructuring(pending);
+              }
+            }
+          }
+        }
       } catch (err: any) {
         setError(err?.message || "Failed to load upcoming bills");
       } finally {
@@ -78,6 +99,27 @@ export default function UpcomingBillsPage() {
 
     fetchLoan();
   }, [loanId]);
+
+  // Refresh collections when modal closes
+  const handleModalClose = () => {
+    setShowPayModal(false);
+    setSelectedCollection(null);
+    // Refresh collections after a short delay to ensure payment is processed
+    setTimeout(() => {
+      if (loanId) {
+        fetch(`${BASE_URL}/collections/${loanId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (Array.isArray(data.collections)) {
+              setCollections(data.collections);
+            }
+          })
+          .catch(err => console.error('Failed to refresh collections:', err));
+      }
+    }, 500);
+  };
 
   if (!loanId) {
     return (
@@ -118,20 +160,61 @@ export default function UpcomingBillsPage() {
             <p className="text-gray-600">Manage and track your loan installments</p>
           </div>
 
+          {/* Pending Restructuring Banner */}
+          {pendingRestructuring && (
+            <div className="mb-6 p-5 bg-white border-2 border-gray-200 rounded-lg animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="p-2 bg-gray-100 rounded-full flex-shrink-0">
+                  <Clock className="w-5 h-5 text-gray-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-900 mb-1">Restructuring Application Pending</p>
+                  <p className="text-sm text-gray-600 mb-3">You have a restructuring application ({pendingRestructuring.applicationId}) currently under review. Status: <span className="font-semibold">{pendingRestructuring.status}</span></p>
+                </div>
+              </div>
+              
+              {/* Payment Info During Restructuring */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <p className="text-sm font-semibold text-gray-900 mb-2">💡 How Payments Work During Restructuring:</p>
+                <ul className="text-sm text-gray-700 space-y-2 ml-4">
+                  <li>✓ <span className="font-medium">Continue paying</span> your current loan installments normally</li>
+                  <li>✓ <span className="font-medium">All payments</span> will be recorded and applied to your account</li>
+                  <li>✓ <span className="font-medium">If approved:</span> Your remaining balance will carry forward based on your selected option</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
           {/* Summary Stats */}
           {!loading && !error && collections.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all">
-                <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wider">Total Amount</p>
-                <p className="text-2xl font-bold text-gray-900">₱{totalAmount.toLocaleString()}</p>
+            <div className="mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                  <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wider">Total Amount</p>
+                  <p className="text-2xl font-bold text-gray-900">₱{totalAmount.toLocaleString()}</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                  <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wider">Amount Paid</p>
+                  <p className="text-2xl font-bold text-gray-900">₱{totalPaid.toLocaleString()}</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                  <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wider">Remaining</p>
+                  <p className="text-2xl font-bold text-red-600">₱{totalRemaining.toLocaleString()}</p>
+                </div>
               </div>
-              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all">
-                <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wider">Amount Paid</p>
-                <p className="text-2xl font-bold text-green-600">₱{totalPaid.toLocaleString()}</p>
-              </div>
-              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm hover:shadow-md transition-all">
-                <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wider">Remaining</p>
-                <p className="text-2xl font-bold text-red-600">₱{totalRemaining.toLocaleString()}</p>
+              
+              {/* Progress Bar */}
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-gray-600 font-medium uppercase tracking-wider">Payment Progress</p>
+                  <span className="text-sm font-bold text-red-600">{paymentProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-red-600 to-red-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${paymentProgress}%` }}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -161,7 +244,13 @@ export default function UpcomingBillsPage() {
               <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <p className="text-xl font-semibold text-gray-900 mb-2">All Payments Completed!</p>
-                <p className="text-gray-600">You have no pending collections at this time.</p>
+                <p className="text-gray-600 mb-6">You have no pending collections at this time.</p>
+                <button
+                  onClick={() => router.push("/userPage/borrowerPage/dashboard")}
+                  className="inline-flex items-center gap-2 px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+                >
+                  View All Bills
+                </button>
               </div>
             ) : (
               <div className="space-y-4 animate-in fade-in slide-in-from-bottom-6 duration-500">
@@ -198,7 +287,7 @@ export default function UpcomingBillsPage() {
                           >
                             <div className="flex items-center justify-between gap-4">
                               {/* Left: Installment Info */}
-                              <div className="flex items-start gap-4 flex-1">
+                              <div className="flex items-start gap-4 flex-1 min-w-0">
                                 <div className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg ${ 
                                   isPriority
                                     ? 'bg-red-600 text-white shadow-lg'
@@ -216,6 +305,11 @@ export default function UpcomingBillsPage() {
                                     <div className={`${isPriority ? 'text-gray-700' : 'text-gray-400'}`}>
                                       <span className="font-semibold">Due Date:</span> <span className="font-medium">{formatDate(c.dueDate)}</span>
                                     </div>
+                                    {isPartial && (
+                                      <div className={`${isPriority ? 'text-gray-700' : 'text-gray-400'}`}>
+                                        <span className="font-semibold">Paid:</span> <span className="font-medium">₱{Number(c.paidAmount ?? 0).toLocaleString()}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -264,7 +358,7 @@ export default function UpcomingBillsPage() {
                             className="rounded-xl p-5 border-2 border-green-200 bg-green-50/50 transition-all hover:shadow-md hover:border-green-300"
                           >
                             <div className="flex items-center justify-between gap-4">
-                              <div className="flex items-start gap-4 flex-1">
+                              <div className="flex items-start gap-4 flex-1 min-w-0">
                                 <div className="flex-shrink-0 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
                                   <CheckCircle className="w-6 h-6 text-green-600" />
                                 </div>
@@ -311,10 +405,7 @@ export default function UpcomingBillsPage() {
           activeLoan={loan}
           setErrorMsg={setErrorMsg}
           setShowErrorModal={setShowErrorModal}
-          onClose={() => {
-            setShowPayModal(false);
-            setSelectedCollection(null);
-          }}
+          onClose={handleModalClose}
         />
       )}
 

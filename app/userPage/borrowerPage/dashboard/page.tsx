@@ -56,23 +56,30 @@ export default function BorrowerDashboard() {
         console.debug('Borrower fetch response:', data);
         setLatestApplication(data.latestApplication || null);
         
-        // Check if latestApplication is a pending application (not the active loan or final status)
-        if (data.latestApplication) {
-          const status = data.latestApplication.status;
-          // Allow button only if status is: Active (disbursed), Denied, or Denied by LO
-          // Block button if status is: Applied, Pending, Cleared, Approved, Disbursed, Withdrawn
-          const isPending = !['Active', 'Denied', 'Denied by LO'].includes(status);
+        // Check for ANY pending applications (not just the current one)
+        // A pending application is one with status: Applied, Pending, Cleared, Approved, or Disbursed
+        if (data.allApplications && Array.isArray(data.allApplications)) {
+          const pendingApp = data.allApplications.find((app: any) => 
+            ['Applied', 'Pending', 'Cleared', 'Approved', 'Disbursed'].includes(app.status)
+          );
           
-          console.log('📋 Application check:', { status, isPending });
+          console.log('📋 Checking all applications:', data.allApplications.length, 'applications found');
+          console.log('📋 Pending application check:', { 
+            hasPending: !!pendingApp,
+            pendingStatus: pendingApp?.status,
+            pendingId: pendingApp?.applicationId
+          });
           
-          // If there's a pending application, disable restructuring button
-          if (isPending) {
-            console.log('✅ Found pending application:', data.latestApplication);
-            setPendingReloanStatus(data.latestApplication);
+          if (pendingApp) {
+            console.log('✅ Found pending application:', pendingApp.applicationId);
+            setPendingReloanStatus(pendingApp);
           } else {
-            console.log('❌ No pending application found');
+            console.log('❌ No pending applications found');
             setPendingReloanStatus(null);
           }
+        } else {
+          console.log('❌ No allApplications array in response');
+          setPendingReloanStatus(null);
         }
       } catch (err: any) {
         console.error('Error fetching borrower details:', err);
@@ -167,21 +174,21 @@ export default function BorrowerDashboard() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Pending Principal Change Banner */}
         {latestApplication?.pendingPrincipalChange && (
-          <div className="relative bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-amber-600 rounded-full flex-shrink-0">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <div className="p-2 bg-red-100 rounded-full flex-shrink-0">
+                <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-amber-900 mb-1">Principal Change Pending</h3>
-                <p className="text-amber-800 text-sm mb-3">
+                <h3 className="font-bold text-gray-900 mb-1">Principal Change Pending</h3>
+                <p className="text-gray-700 text-sm mb-3">
                   Requested change from <span className="font-semibold">{formatCurrency(latestApplication.appLoanAmount ?? 0)}</span> to <span className="font-semibold">{formatCurrency(latestApplication.requestedPrincipal ?? 0)}</span>
                 </p>
                 <button
                   onClick={() => router.push(`/userPage/borrowerPage/application-details?id=${latestApplication.applicationId}`)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-xs rounded-lg font-semibold hover:bg-amber-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-xs rounded-lg font-semibold hover:bg-red-700 transition-colors"
                 >
                   Review Request
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,13 +297,13 @@ export default function BorrowerDashboard() {
                       </div>
                       
                       <div className="grid grid-cols-2 gap-3 mt-auto">
-                        <div className="bg-green-50 rounded-lg p-3 border border-green-200 hover:border-green-400 transition-colors duration-300 cursor-default hover:bg-green-100/50\">
-                          <p className="text-xs text-green-600 font-medium mb-1\">Paid</p>
-                          <p className="text-sm font-bold text-green-700\">₱{paid.toLocaleString()}</p>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 transition-colors duration-300 cursor-default">
+                          <p className="text-xs text-gray-600 font-medium mb-1">Paid</p>
+                          <p className="text-sm font-bold text-gray-900">₱{paid.toLocaleString()}</p>
                         </div>
-                        <div className="bg-red-50 rounded-lg p-3 border border-red-200 hover:border-red-400 transition-colors duration-300 cursor-default hover:bg-red-100/50\">
-                          <p className="text-xs text-red-600 font-medium mb-1\">Remaining</p>
-                          <p className="text-sm font-bold text-red-700\">₱{remaining.toLocaleString()}</p>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 transition-colors duration-300 cursor-default">
+                          <p className="text-xs text-gray-600 font-medium mb-1">Remaining</p>
+                          <p className="text-sm font-bold text-gray-900">₱{remaining.toLocaleString()}</p>
                         </div>
                       </div>
                       {percentPaid >= 70 && !pendingReloanStatus ? (
@@ -312,7 +319,7 @@ export default function BorrowerDashboard() {
                             };
                             router.push(`/userPage/borrowerPage/applyLoan?reloan=${encodeURIComponent(JSON.stringify(reloanData))}`);
                           }}
-                          className="w-full mt-4 px-4 py-3 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-all hover:shadow-lg hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          className="w-full mt-4 px-4 py-3 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-all hover:shadow-lg hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-300"
                         >
                           Apply for Restructuring
                         </button>
@@ -322,7 +329,7 @@ export default function BorrowerDashboard() {
                           className="w-full mt-4 px-4 py-3 bg-gray-400 text-white rounded-lg text-sm font-semibold cursor-not-allowed animate-in fade-in slide-in-from-bottom-2 duration-300"
                           title={`You have a ${pendingReloanStatus.status} restructuring application. Please wait for it to be processed.`}
                         >
-                          Restructuring {pendingReloanStatus.status}
+                          Pending Restructure Application
                         </button>
                       ) : null}
                     </div>
@@ -331,11 +338,8 @@ export default function BorrowerDashboard() {
 
                 {/* Next Payment Due Box - Full Width */}
                 <div className="bg-white rounded-2xl p-6 shadow-md border border-gray-100 animate-in fade-in slide-in-from-bottom-6 duration-500 delay-200 hover:shadow-lg transition-all duration-300">
-                    <div className="flex items-center justify-between mb-5">
-                      <div>
-                        <h4 className="text-lg font-bold text-gray-900">Next Payment Due</h4>
-                        <p className="text-xs text-gray-500 mt-1">Keep your payments on track</p>
-                      </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg font-bold text-gray-900">Next Payment Due</h4>
                       <div className="p-2.5 bg-red-100 rounded-full">
                         <Calendar className="w-5 h-5 text-red-600" />
                       </div>
@@ -349,132 +353,87 @@ export default function BorrowerDashboard() {
                         const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
                         
                         // Determine urgency level
-                        let urgencyColor = 'bg-green-100 text-green-700 border-green-300';
-                        let urgencyBgColor = 'bg-green-50';
                         let urgencyText = 'On Track';
-                        let urgencyIcon = '✓';
                         
                         if (daysUntilDue < 0) {
-                          urgencyColor = 'bg-red-100 text-red-700 border-red-300';
-                          urgencyBgColor = 'bg-red-50';
                           urgencyText = 'Overdue';
-                          urgencyIcon = '⚠';
                         } else if (daysUntilDue <= 3) {
-                          urgencyColor = 'bg-red-100 text-red-700 border-red-300';
-                          urgencyBgColor = 'bg-red-50';
                           urgencyText = 'Due Soon';
-                          urgencyIcon = '!';
                         } else if (daysUntilDue <= 7) {
-                          urgencyColor = 'bg-yellow-100 text-yellow-700 border-yellow-300';
-                          urgencyBgColor = 'bg-yellow-50';
                           urgencyText = 'Due This Week';
-                          urgencyIcon = '◷';
                         }
                         
                         return (
                           <div className="space-y-4">
-                            {/* Urgency Badge */}
-                            <div className={`${urgencyColor} border-2 rounded-xl p-4 flex items-center gap-3 animate-in fade-in pulse duration-300`}>
-                              <span className="text-2xl animate-bounce">{urgencyIcon}</span>
-                              <div className="flex-1">
-                                <p className="text-sm font-bold">{urgencyText}</p>
-                                <p className="text-xs opacity-85">
-                                  {daysUntilDue < 0 
-                                    ? `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) !== 1 ? 's' : ''} overdue`
-                                    : daysUntilDue === 0
-                                    ? '🔴 Due today'
-                                    : `${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''} remaining`
-                                  }
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-xs text-opacity-70">Days</p>
-                                <p className="text-2xl font-bold">{Math.max(0, daysUntilDue)}</p>
-                              </div>
-                            </div>
-
-                            {/* Payment Details - Enhanced */}
-                            <div className={`${urgencyBgColor} p-6 rounded-xl border-2 border-gray-200 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-100`}>
-                              <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center text-lg font-bold shadow-md">
-                                    {nextPayment.collectionNumber ?? '1'}
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-bold text-gray-900">
-                                      {nextPayment.collectionNumber ? `Installment ${nextPayment.collectionNumber}` : 'Next Payment'}
-                                    </p>
-                                    <p className="text-xs text-gray-600">
-                                      {nextPayment.referenceNumber || 'Regular payment'}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <p className="text-xs text-gray-600 mb-1">Amount Due</p>
-                                  <p className="text-2xl font-bold text-red-600">
+                            {/* Main Payment Info Card */}
+                            <div className="bg-white border-2 border-red-200 rounded-xl p-5">
+                              <div className="flex items-start justify-between mb-4">
+                                <div>
+                                  <p className="text-sm font-bold text-red-600 mb-1">{urgencyText}</p>
+                                  <p className="text-2xl font-bold text-gray-900">
                                     ₱{Number(nextPayment.periodBalance ?? nextPayment.periodAmount - (nextPayment.paidAmount ?? 0)).toLocaleString()}
                                   </p>
                                 </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-600 mb-1">Due In</p>
+                                  <p className="text-3xl font-bold text-red-600">{Math.max(0, daysUntilDue)}</p>
+                                  <p className="text-xs text-gray-600">days</p>
+                                </div>
                               </div>
                               
-                              <div className="bg-white rounded-lg p-3 flex items-center justify-between border border-gray-200 hover:border-red-400 hover:bg-red-50/30 transition-all duration-300">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="w-4 h-4 text-red-600 animate-in bounce" />
-                                  <span className="text-xs font-medium text-gray-700">Due Date</span>
-                                </div>
-                                <span className="font-bold text-gray-900">
-                                  {dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                </span>
+                              <div className="flex items-center gap-2 text-sm text-gray-700">
+                                <Calendar className="w-4 h-4 text-red-600" />
+                                <span>{dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                               </div>
                             </div>
 
                             {/* Quick Stats */}
-                            <div className="grid grid-cols-3 gap-2 animate-in fade-in duration-300 delay-200">
-                              <div className="bg-white rounded-lg p-3 text-center border border-gray-200 hover:border-green-400 hover:bg-green-50/50 transition-all duration-300">
-                                <p className="text-xs text-gray-600 font-medium mb-1">Paid on Time</p>
-                                <p className="text-lg font-bold text-green-600">
-                                  {collections.filter((c: any) => c.status === 'Paid').length}/{collections.length}
-                                </p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                <p className="text-xs text-gray-600 font-medium mb-1">Installment</p>
+                                <p className="text-lg font-bold text-gray-900">{nextPayment.collectionNumber ?? '1'} / {collections.length}</p>
                               </div>
-                              <div className="bg-white rounded-lg p-3 text-center border border-gray-200 hover:border-orange-400 hover:bg-orange-50/50 transition-all duration-300">
-                                <p className="text-xs text-gray-600 font-medium mb-1">Total Due</p>
-                                <p className="text-lg font-bold text-gray-900">
-                                  ₱{Number(remaining).toLocaleString()}
-                                </p>
-                              </div>
-                              <div className="bg-white rounded-lg p-3 text-center border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all duration-300">
-                                <p className="text-xs text-gray-600 font-medium mb-1">Installments</p>
-                                <p className="text-lg font-bold text-gray-900">
-                                  {collections.length}
-                                </p>
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                <p className="text-xs text-gray-600 font-medium mb-1">Total Remaining</p>
+                                <p className="text-lg font-bold text-gray-900">₱{Number(remaining).toLocaleString()}</p>
                               </div>
                             </div>
+
+                            {/* Payment Button */}
+                            <button
+                              onClick={() => {
+                                const targetLoanId = loan?.loanId ?? latestApplication?.loanId;
+                                if (targetLoanId) {
+                                  router.push(`/userPage/borrowerPage/upcoming-bills?loanId=${encodeURIComponent(targetLoanId)}`);
+                                }
+                              }}
+                              className="w-full bg-red-600 text-white rounded-lg text-base font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg py-3 border-2 border-transparent"
+                            >
+                              Make Payment
+                            </button>
                           </div>
                         );
                       })()
                     ) : (
-                      <div className="text-center py-12">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                          <CheckCircle className="w-8 h-8 text-green-600" />
+                      <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-14 h-14 bg-gray-100 rounded-full mb-3">
+                          <CheckCircle className="w-7 h-7 text-gray-700" />
                         </div>
-                        <p className="text-lg font-semibold text-gray-900 mb-1">All Caught Up! 🎉</p>
-                        <p className="text-sm text-gray-600">No upcoming payments at this time</p>
+                        <p className="text-base font-semibold text-gray-900 mb-1">All Caught Up! 🎉</p>
+                        <p className="text-sm text-gray-600 mb-4">No upcoming payments at this time</p>
+                        <button
+                          onClick={() => {
+                            const targetLoanId = loan?.loanId ?? latestApplication?.loanId;
+                            if (targetLoanId) {
+                              router.push(`/userPage/borrowerPage/upcoming-bills?loanId=${encodeURIComponent(targetLoanId)}`);
+                            }
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-all shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
+                        >
+                          View Bills
+                        </button>
                       </div>
                     )}
-
-                    <div className="mt-5 animate-in fade-in duration-300 delay-300">
-                      <button
-                        onClick={() => {
-                          const targetLoanId = loan?.loanId ?? latestApplication?.loanId;
-                          if (targetLoanId) {
-                            router.push(`/userPage/borrowerPage/upcoming-bills?loanId=${encodeURIComponent(targetLoanId)}`);
-                          }
-                        }}
-                        className="w-full bg-red-600 text-white rounded-lg text-base font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95 py-3 border-2 border-transparent"
-                      >
-                        Make Payment Now
-                      </button>
-                    </div>
                 </div>
               </div>
           ) : latestApplication && latestApplication.status !== 'Active' ? (
@@ -519,14 +478,14 @@ export default function BorrowerDashboard() {
                         return (
                           <div key={step} className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300 fill-mode-both\" style={{animationDelay: `${index * 50}ms`}}>
                             <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-semibold text-xs transition-all duration-300 ${ 
-                              isCompleted ? 'bg-green-500 text-white' : 
+                              isCompleted ? 'bg-gray-700 text-white' : 
                               isCurrent ? 'bg-red-600 text-white animate-pulse' : 
                               'bg-gray-300 text-gray-600'
                             }`}>
                               {isCompleted ? '✓' : (isCurrent ? '◉' : '○')}
                             </div>
                             <span className={`text-sm font-medium ${ 
-                              isCompleted ? 'text-green-600' : 
+                              isCompleted ? 'text-gray-700' : 
                               isCurrent ? 'text-red-600' : 
                               'text-gray-400'
                             }`}>
@@ -598,14 +557,14 @@ export default function BorrowerDashboard() {
                       return (
                         <div key={step} className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300 fill-mode-both\" style={{animationDelay: `${index * 50}ms`}}>
                           <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-semibold text-xs transition-all duration-300 ${ 
-                            isCompleted ? 'bg-green-500 text-white' : 
+                            isCompleted ? 'bg-gray-700 text-white' : 
                             isCurrent ? 'bg-red-600 text-white animate-pulse' : 
                             'bg-gray-300 text-gray-600'
                           }`}>
                             {isCompleted ? '✓' : (isCurrent ? '◉' : '○')}
                           </div>
                           <span className={`text-sm font-medium ${ 
-                            isCompleted ? 'text-green-600' : 
+                            isCompleted ? 'text-gray-700' : 
                             isCurrent ? 'text-red-600' : 
                             'text-gray-400'
                           }`}>
@@ -619,8 +578,8 @@ export default function BorrowerDashboard() {
                 </div>
 
                 {/* Compact Info Message */}
-                <div className="mb-5 p-3 bg-blue-50 border border-blue-200 rounded-lg animate-in fade-in pulse duration-500">
-                  <p className="text-xs text-blue-900">
+                <div className="mb-5 p-3 bg-gray-50 border border-gray-200 rounded-lg animate-in fade-in pulse duration-500">
+                  <p className="text-xs text-gray-700">
                     Your application is <span className="font-semibold">{latestApplication.status}</span>. We'll notify you of updates.
                   </p>
                 </div>
@@ -636,25 +595,25 @@ export default function BorrowerDashboard() {
               </div>
             </div>
           ) : (
-            <div className="relative bg-gradient-to-br from-red-600 via-red-500 to-red-700 rounded-2xl p-8 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-red-400/20 rounded-full blur-3xl animate-pulse" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-red-800/20 rounded-full blur-3xl animate-pulse" />
+            <div className="relative bg-white border-2 border-gray-200 rounded-2xl p-8 shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-gray-100/40 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gray-50/50 rounded-full blur-3xl" />
               <div className="relative z-10 max-w-2xl mx-auto text-center">
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-white/20 rounded-xl mb-4 animate-in bounce duration-500">
-                    <Wallet className="w-7 h-7 text-white" />
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-red-100 rounded-xl mb-4 animate-in bounce duration-500">
+                    <Wallet className="w-7 h-7 text-red-600" />
                 </div>
                 
-                <h2 className="text-3xl font-bold text-white mb-3 animate-in fade-in slide-in-from-top-4 duration-500 delay-100">
+                <h2 className="text-3xl font-bold text-gray-900 mb-3 animate-in fade-in slide-in-from-top-4 duration-500 delay-100">
                   Ready to Get Started?
                 </h2>
                 
-                <p className="text-red-100 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
+                <p className="text-gray-700 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
                   You don't have an active loan. Apply now and get access to flexible loan options tailored to your needs.
                 </p>
                 
                 <button
                   onClick={() => router.push('/userPage/borrowerPage/applyLoan')}
-                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-red-600 rounded-lg font-semibold hover:bg-gray-50 transition-all shadow-md border border-red-200 hover:shadow-lg hover:scale-105 active:scale-95 animate-in fade-in duration-500 delay-200"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95 animate-in fade-in duration-500 delay-200"
                 >
                   Apply for a Loan
                   <ArrowRight className="w-5 h-5" />

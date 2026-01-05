@@ -5,7 +5,7 @@ type Props = {
   setShowForgotModal: (show: boolean) => void;
 };
 
-export default function StepRole({ setPendingStep }: Props) {
+export default function StepRole({ setPendingStep, setShowForgotModal }: Props) {
   return (
     <div className="text-center">
       {/* Header */}

@@ -212,7 +212,7 @@ export default function ForgotPasswordModal({ forgotRole, setForgotRole, setShow
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 flex justify-center items-center z-50 transition-opacity duration-300 ${
+      className={`fixed inset-0 bg-black/50 flex justify-center items-center z-[100] transition-opacity duration-300 ${
         animateIn ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={() => setShowForgotModal(false)} 
@@ -226,7 +226,7 @@ export default function ForgotPasswordModal({ forgotRole, setForgotRole, setShow
       )}
   
       <div
-        className={`relative bg-white w-[400px] rounded-lg shadow-lg p-6 transform transition-all duration-300 ease-out ${
+        className={`relative bg-white w-full max-w-md sm:max-w-lg mx-4 rounded-lg shadow-lg p-6 sm:p-8 transform transition-all duration-300 ease-out ${
           animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
         }`}
         onClick={(e) => e.stopPropagation()}

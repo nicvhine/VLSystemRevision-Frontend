@@ -60,13 +60,13 @@ const ApplicationButtons: React.FC<ApplicationButtonsProps> = ({
       .replace("{id}", application.applicationId)
       .replace("{status}", status);
 
-  const handleDenialConfirm = async (reason: string) => {
+  const handleDenialConfirm = async (reason: string, missingDocuments?: Record<string, boolean>, description?: string) => {
     setIsDenying(true);
     try {
       if (denialType === 'direct') {
-        await handleDenyApplication(application, setApplications, authFetch, showSuccess, showError, reason);
+        await handleDenyApplication(application, setApplications, authFetch, showSuccess, showError, reason, missingDocuments, description);
       } else if (denialType === 'fromCleared') {
-        await handleDenyFromCleared(application, setApplications, authFetch, showSuccess, showError, reason);
+        await handleDenyFromCleared(application, setApplications, authFetch, showSuccess, showError, reason, missingDocuments, description);
       }
       setShowDenialModal(false);
       setDenialType(null);

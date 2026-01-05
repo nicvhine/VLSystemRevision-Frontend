@@ -163,11 +163,11 @@
 
         {/* Remaining Balance Options for Reloan */}
         {reloanData?.isReloan && reloanData?.remainingBalance > 0 && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h5 className="font-semibold text-blue-900 mb-2">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h5 className="font-semibold text-red-900 mb-2">
               {language === "en" ? "Remaining Balance from Previous Loan" : "Natitirang Bayad mula sa Nakaraang Pahulam"}
             </h5>
-            <p className="text-blue-800 text-sm mb-4">
+            <p className="text-red-800 text-sm mb-4">
               {language === "en" 
                 ? `You have a remaining balance of ₱${(reloanData.remainingBalance || 0).toLocaleString()}. How would you like to handle this?`
                 : `May natitirang bayad kang ₱${(reloanData.remainingBalance || 0).toLocaleString()}. Paano mo gustong tratuhin ito?`
@@ -181,8 +181,8 @@
                 onClick={() => setRemainingBalanceOption('add-to-principal')}
                 className={`p-4 rounded-lg border-2 transition-all text-left ${
                   remainingBalanceOption === 'add-to-principal'
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-300 bg-white hover:border-green-300'
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300 bg-white hover:border-red-300'
                 }`}
               >
                 <div className="font-semibold text-gray-800 mb-1">
@@ -208,8 +208,8 @@
                 onClick={() => setRemainingBalanceOption('deduct-from-receivable')}
                 className={`p-4 rounded-lg border-2 transition-all text-left ${
                   remainingBalanceOption === 'deduct-from-receivable'
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-gray-300 bg-white hover:border-purple-300'
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300 bg-white hover:border-red-300'
                 }`}
               >
                 <div className="font-semibold text-gray-800 mb-1">
@@ -326,7 +326,7 @@
 
             {/* Final Loan Amount for Add to Principal */}
             {remainingBalanceOption === 'add-to-principal' && reloanData?.remainingBalance > 0 && selectedLoan && customLoanAmount !== "" && (
-              <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">
@@ -344,12 +344,12 @@
                       ₱{(reloanData.remainingBalance || 0).toLocaleString()}
                     </span>
                   </div>
-                  <div className="h-px bg-emerald-200"></div>
+                  <div className="h-px bg-red-200"></div>
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-emerald-900">
+                    <span className="font-semibold text-red-900">
                       {language === "en" ? "Total Loan Amount" : "Kabuuang Pahulam"}
                     </span>
-                    <span className="text-xl font-bold text-emerald-700">
+                    <span className="text-xl font-bold text-red-700">
                       ₱{(Number(customLoanAmount) + (reloanData.remainingBalance || 0)).toLocaleString()}
                     </span>
                   </div>

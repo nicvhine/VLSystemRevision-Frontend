@@ -9,7 +9,9 @@ async function handleApiUpdate(
   showSuccess: (msg: string) => void,
   showError: (msg: string) => void,
   extraCallback?: () => void,
-  denialReason?: string
+  denialReason?: string,
+  missingDocuments?: Record<string, boolean>,
+  description?: string
 ) {
   try {
     const id = application?.applicationId;
@@ -18,6 +20,12 @@ async function handleApiUpdate(
     const body: any = { status };
     if (denialReason) {
       body.denialReason = denialReason;
+    }
+    if (missingDocuments) {
+      body.missingDocuments = missingDocuments;
+    }
+    if (description) {
+      body.denialDescription = description;
     }
 
     const res = await authFetch(`${BASE_URL}/loan-applications/${id}`, {
@@ -79,8 +87,10 @@ export const handleDenyApplication = (
   authFetch: any,
   showSuccess: (msg: string) => void,
   showError: (msg: string) => void,
-  denialReason?: string
-) => handleApiUpdate(application, setApplications, authFetch, "Denied", showSuccess, showError, undefined, denialReason);
+  denialReason?: string,
+  missingDocuments?: Record<string, boolean>,
+  description?: string
+) => handleApiUpdate(application, setApplications, authFetch, "Denied", showSuccess, showError, undefined, denialReason, missingDocuments, description);
 
 export const handleApproveApplication = (
   application: any,
@@ -96,8 +106,10 @@ export const handleDenyFromCleared = (
   authFetch: any,
   showSuccess: (msg: string) => void,
   showError: (msg: string) => void,
-  denialReason?: string
-) => handleApiUpdate(application, setApplications, authFetch, "Denied by LO", showSuccess, showError, undefined, denialReason);
+  denialReason?: string,
+  missingDocuments?: Record<string, boolean>,
+  description?: string
+) => handleApiUpdate(application, setApplications, authFetch, "Denied by LO", showSuccess, showError, undefined, denialReason, missingDocuments, description);
 
 // Helper: safely parse error messages from Response
 async function safeErrorMessage(res: Response | any): Promise<string | undefined> {

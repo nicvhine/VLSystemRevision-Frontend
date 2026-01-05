@@ -107,7 +107,7 @@ export interface DecisionModalProps {
 export interface DenialReasonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (reason: string) => void;
+  onConfirm: (reason: string, missingDocuments?: Record<string, boolean>, description?: string) => void;
   applicationId?: string;
   loading?: boolean;
   title?: string;

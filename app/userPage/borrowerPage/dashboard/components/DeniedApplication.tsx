@@ -2,10 +2,9 @@ import { useRouter } from 'next/navigation';
 
 interface DeniedApplicationProps {
   latestApplication: any;
-  cooldownSeconds: number;
 }
 
-const DeniedApplication = ({ latestApplication, cooldownSeconds }: DeniedApplicationProps) => {
+const DeniedApplication = ({ latestApplication }: DeniedApplicationProps) => {
   const router = useRouter();
 
   return (
@@ -27,39 +26,8 @@ const DeniedApplication = ({ latestApplication, cooldownSeconds }: DeniedApplica
         </h2>
         
         <p className="text-red-700 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
-          Unfortunately, your application did not meet our approval criteria at this time. Please try again after the cooldown period.
+          Unfortunately, your application did not meet our approval criteria at this time.
         </p>
-
-        {/* Cooldown Timer */}
-        <div className="bg-white rounded-xl p-6 mb-6 border-2 border-red-300 shadow-md animate-in fade-in duration-500 delay-200">
-          <p className="text-sm text-gray-600 mb-3">You can apply again in:</p>
-          <div className="flex items-center justify-center gap-3">
-            <div className="relative w-20 h-20">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" strokeWidth="6" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="#dc2626"
-                  strokeWidth="6"
-                  strokeDasharray={`${(cooldownSeconds / 5) * 2 * Math.PI * 45}`}
-                  strokeDashoffset="0"
-                  strokeLinecap="round"
-                  className="transition-all duration-1000 ease-out"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold text-red-600">{cooldownSeconds}</span>
-              </div>
-            </div>
-            <div className="text-left">
-              <p className="text-sm text-gray-600">Seconds</p>
-              <p className="text-xs text-gray-500">Until next application</p>
-            </div>
-          </div>
-        </div>
 
         {/* Pending Principal Change Notification */}
         {latestApplication?.pendingPrincipalChange && (
@@ -83,12 +51,7 @@ const DeniedApplication = ({ latestApplication, cooldownSeconds }: DeniedApplica
           <div className="flex gap-3 justify-center">
             <button
               onClick={() => router.push('/userPage/borrowerPage/applyLoan')}
-              disabled={cooldownSeconds > 0}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all shadow-md ${
-                cooldownSeconds > 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
-                  : 'bg-red-600 text-white hover:bg-red-700 hover:shadow-lg hover:scale-105 active:scale-95'
-              }`}
+              className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
             >
               Apply Again
             </button>

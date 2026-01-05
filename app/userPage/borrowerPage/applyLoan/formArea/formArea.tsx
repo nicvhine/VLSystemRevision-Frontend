@@ -52,6 +52,7 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [missingFields, setMissingFields] = useState<string[]>([]);
+  const [pendingReloanStatus, setPendingReloanStatus] = useState<any | null>(null);
 
   const loanTypeParam =
     loanType === "Regular Loan With Collateral"
@@ -293,6 +294,44 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
     if (storedPhone && !appContact) setAppContact(storedPhone);
   }, []);
 
+  // Check for pending reloan status when borrower id is available
+  useEffect(() => {
+    if (!borrowersId) return;
+
+    const checkPendingReloan = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${BASE_URL}/borrowers/${borrowersId}`, {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        
+        if (!res.ok) return;
+        
+        const data = await res.json();
+        
+        // Check for ANY pending applications (not just the current one)
+        if (data.allApplications && Array.isArray(data.allApplications)) {
+          const pendingApp = data.allApplications.find((app: any) => 
+            ['Applied', 'Pending', 'Cleared', 'Approved', 'Disbursed'].includes(app.status)
+          );
+          
+          console.log('📋 Form checking applications:', data.allApplications.length, 'found');
+          
+          if (pendingApp) {
+            console.log('✅ Form found pending application:', pendingApp.applicationId);
+            setPendingReloanStatus(pendingApp);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking reloan status:', err);
+      }
+    };
+
+    checkPendingReloan();
+  }, [borrowersId]);
+
   // Fetch and prefill from previous application
   useEffect(() => {
     const prefillFromPreviousApplication = async () => {
@@ -483,28 +522,38 @@ export default forwardRef<{ submitForm: () => Promise<void> }, FormAreaProps>(fu
 
       {/* Submit Button */}
       <div className={`mt-6 flex ${isMobile ? "justify-center" : "justify-end"}`}>
-        <button
-          onClick={async () => {
-            if (isSubmitting) return;
-            const valid = await handleSubmit();
-            if (!valid) {
-              setErrorMessage(
-                language === "en"
-                  ? "Please complete all required fields before submitting."
-                  : "Palihug isulod ang tanang kinahanglan nga detalye una sa pag-submit."
-              );
-              setShowErrorModal(true);
-              return;
-            }
-            // show loan agreement modal instead of terms & policy
-            setShowAgreementModal(true);
-          }}
-          disabled={isSubmitting}
-          className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? <ButtonDotsLoading label={language === "en" ? "Submitting" : "Nag-submit"} />
-            : language === "en" ? "Submit Application" : "Isumite ang Aplikasyon"}
-        </button>
+        {pendingReloanStatus ? (
+          <button
+            disabled
+            className="bg-gray-400 text-white px-6 py-3 rounded-lg font-medium cursor-not-allowed opacity-70"
+            title={`You have a ${pendingReloanStatus.status} restructuring application. Please wait for it to be processed.`}
+          >
+            {language === "en" ? "Pending Restructure Application" : "Naghulat na Restructure Application"}
+          </button>
+        ) : (
+          <button
+            onClick={async () => {
+              if (isSubmitting) return;
+              const valid = await handleSubmit();
+              if (!valid) {
+                setErrorMessage(
+                  language === "en"
+                    ? "Please complete all required fields before submitting."
+                    : "Palihug isulod ang tanang kinahanglan nga detalye una sa pag-submit."
+                );
+                setShowErrorModal(true);
+                return;
+              }
+              // show loan agreement modal instead of terms & policy
+              setShowAgreementModal(true);
+            }}
+            disabled={isSubmitting}
+            className="bg-red-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-700 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? <ButtonDotsLoading label={language === "en" ? "Submitting" : "Nag-submit"} />
+              : language === "en" ? "Submit Application" : "Isumite ang Aplikasyon"}
+          </button>
+        )}
       </div>
 
       {showSuccessModal && (

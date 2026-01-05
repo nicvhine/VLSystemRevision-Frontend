@@ -17,14 +17,6 @@ interface HeroSectionProps {
   setIsTrackOpen?: (open: boolean) => void;
 }
 
-/**
- * Hero section component with image carousel and call-to-action content
- * Features a Swiper carousel with company images and bilingual support
- * @param language - Language preference for content display
- * @param isTrackOpen - Parent state for track modal visibility
- * @param setIsTrackOpen - Parent function to control track modal visibility
- * @returns JSX element containing the hero section with carousel
- */
 export default function HeroSection({ 
   language = 'en', 
   isTrackOpen: parentIsTrackOpen, 
@@ -80,12 +72,6 @@ export default function HeroSection({
           </p>
 
           <div className="flex flex-col mt-10 sm:flex-row items-center justify-center md:justify-start gap-4">
-            <Link
-              href="/userPage/publicPage/applyLoan"
-              className="bg-red-600 text-white px-6 py-3 rounded-full font-medium hover:bg-red-700 transition focus:outline-none active:bg-red-600"
-            >
-              {t.applyBtn}
-            </Link>
 
             <button
               onClick={() => setIsTrackOpen(true)}

@@ -46,6 +46,16 @@ export default function LoginModal({ isOpen, onClose, language = 'en' }: LoginMo
 
   return (
     <>
+      {showForgotModal && (
+        <ForgotPasswordModal
+          forgotRole={forgotRole}
+          setForgotRole={(role: string | null) =>
+            setForgotRole(role === 'borrower' || role === 'staff' || role === '' ? role : '')
+          }
+          setShowForgotModal={setShowForgotModal}
+        />
+      )}
+
       {!showSMSModal && (
         <div className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 transition-opacity duration-300 ${animateIn ? 'opacity-100' : 'opacity-0'}`}>
           <div className={`bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden relative text-black transform transition-all duration-300 ease-out ${animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'}`}>
@@ -69,16 +79,8 @@ export default function LoginModal({ isOpen, onClose, language = 'en' }: LoginMo
                   ✖
                 </button>
 
-                {/* FORGOT PASSWORD */}
-                {showForgotModal ? (
-                  <ForgotPasswordModal
-                    forgotRole={forgotRole}
-                    setForgotRole={(role: string | null) =>
-                      setForgotRole(role === 'borrower' || role === 'staff' || role === '' ? role : '')
-                    }
-                    setShowForgotModal={setShowForgotModal}
-                  />
-                ) : showRegisterModal ? (
+                {/* FORGOT PASSWORD - Removed from here, now rendered outside */}
+                {showRegisterModal ? (
                   /* REGISTER */
                   <RegisterForm
                     onClose={onClose}

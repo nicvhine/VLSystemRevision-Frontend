@@ -600,14 +600,71 @@ export default function ApplicationDetailsPage() {
 
           {/* Denial Reason Card */}
           {application.status === 'Denied' && application.denialReason && (
-            <div className="bg-red-50 rounded-2xl p-5 border border-red-200 animate-in fade-in slide-in-from-top-4 duration-500 delay-75">
+            <div className="bg-red-50 rounded-2xl p-6 border border-red-200 animate-in fade-in slide-in-from-top-4 duration-500 delay-75">
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-full bg-red-100 flex-shrink-0 mt-0.5">
                   <AlertCircle className="w-5 h-5 text-red-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-sm font-bold text-red-900 mb-2">Reason for Denial</h3>
-                  <p className="text-sm text-red-800 leading-relaxed">{safeDisplay(application.denialReason)}</p>
+                  <h3 className="text-sm font-bold text-red-900 mb-3">Reason for Denial</h3>
+                  
+                  {/* Main Denial Reason */}
+                  <div className="mb-4 p-4 bg-white rounded-lg border border-red-200">
+                    <p className="text-sm text-red-900 leading-relaxed">{safeDisplay(application.denialReason)}</p>
+                  </div>
+
+                  {/* Missing Documents if available */}
+                  {application.missingDocuments && Object.values(application.missingDocuments).some((v: any) => v) && (
+                    <div className="mb-4">
+                      <p className="text-xs font-semibold text-red-900 uppercase mb-2">Missing/Invalid Documents:</p>
+                      <div className="space-y-2">
+                        {application.missingDocuments.basicInformation && (
+                          <div className="flex items-center gap-2 text-sm text-red-800">
+                            <span className="w-5 h-5 rounded border border-red-500 flex items-center justify-center text-xs font-bold text-red-600">✕</span>
+                            <span>Basic Information</span>
+                          </div>
+                        )}
+                        {application.missingDocuments.sourceOfIncome && (
+                          <div className="flex items-center gap-2 text-sm text-red-800">
+                            <span className="w-5 h-5 rounded border border-red-500 flex items-center justify-center text-xs font-bold text-red-600">✕</span>
+                            <span>Source of Income</span>
+                          </div>
+                        )}
+                        {application.missingDocuments.references && (
+                          <div className="flex items-center gap-2 text-sm text-red-800">
+                            <span className="w-5 h-5 rounded border border-red-500 flex items-center justify-center text-xs font-bold text-red-600">✕</span>
+                            <span>References</span>
+                          </div>
+                        )}
+                        {application.missingDocuments.loanDetails && (
+                          <div className="flex items-center gap-2 text-sm text-red-800">
+                            <span className="w-5 h-5 rounded border border-red-500 flex items-center justify-center text-xs font-bold text-red-600">✕</span>
+                            <span>Loan Details</span>
+                          </div>
+                        )}
+                        {application.missingDocuments.photo2x2 && (
+                          <div className="flex items-center gap-2 text-sm text-red-800">
+                            <span className="w-5 h-5 rounded border border-red-500 flex items-center justify-center text-xs font-bold text-red-600">✕</span>
+                            <span>2x2 Photo</span>
+                          </div>
+                        )}
+                        {application.missingDocuments.supportingDocuments && (
+                          <div className="flex items-center gap-2 text-sm text-red-800">
+                            <span className="w-5 h-5 rounded border border-red-500 flex items-center justify-center text-xs font-bold text-red-600">✕</span>
+                            <span>Supporting Documents</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Additional Details if available */}
+                  {application.dismissalDescription && (
+                    <div className="p-3 bg-red-100/50 rounded-lg border border-red-300">
+                      <p className="text-xs font-semibold text-red-900 mb-1">Additional Notes:</p>
+                      <p className="text-xs text-red-800">{application.dismissalDescription}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
