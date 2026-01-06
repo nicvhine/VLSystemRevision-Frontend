@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import ConfirmModal from "../../../modals/confirmModal";
 import DenialReasonModal from "../../../modals/denialReasonModal";
+import CIChecklistModal, { CIChecklistData } from "../../../modals/loanApplication/ciChecklistModal";
 import { 
   handleClearedLoan, 
   handleDisburse, 
@@ -10,6 +11,7 @@ import {
   handleApproveApplication, 
   handleDenyFromCleared 
 } from "./statusHandler";
+import { submitCIChecklist } from "../functions/ciHandler";
 import { createPortal } from "react-dom";
 import SubmitOverlayToast from "@/app/commonComponents/utils/submitOverlayToast";
 import { ApplicationButtonsProps } from "@/app/commonComponents/utils/Types/components";
@@ -39,6 +41,10 @@ const ApplicationButtons: React.FC<ApplicationButtonsProps> = ({
   const [showDenialModal, setShowDenialModal] = useState(false);
   const [denialType, setDenialType] = useState<'direct' | 'fromCleared' | null>(null);
   const [isDenying, setIsDenying] = useState(false);
+  
+  // CI Checklist modal state
+  const [showCIModal, setShowCIModal] = useState(false);
+  const [isSubmittingCI, setIsSubmittingCI] = useState(false);
 
   if (!application) return null;
 
@@ -113,10 +119,7 @@ const ApplicationButtons: React.FC<ApplicationButtonsProps> = ({
       {application.status === "Pending" && role === "loan officer" && (
         <>
           <button
-            onClick={() => {
-              setShowConfirm({ type: 'clear' });
-              setPendingAction(() => () => handleClearedLoan(application, setApplications, authFetch, showSuccess, showError));
-            }}
+            onClick={() => setShowCIModal(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
           >
             {a.b3}
@@ -130,24 +133,30 @@ const ApplicationButtons: React.FC<ApplicationButtonsProps> = ({
           >
             {a.b2}
           </button>
-          <ConfirmModal
-            show={showConfirm.type === 'clear'}
-            message={statusMessage("Cleared")}
-            title={a.cm1}
-            confirmLabel={a.cm6}
-            cancelLabel={a.cm7}
-            processingLabel={a.cm5}
-            onConfirm={async () => {
-              setShowConfirm({ type: null });
+
+          {/* CI Checklist Modal */}
+          <CIChecklistModal
+            isOpen={showCIModal}
+            onCloseAction={() => setShowCIModal(false)}
+            onSubmitAction={async (ciData: CIChecklistData) => {
+              setIsSubmittingCI(true);
               try {
-                setIsActing(true);
-                await Promise.resolve(pendingAction());
+                await submitCIChecklist(ciData, authFetch, showSuccess, showError);
+                setShowCIModal(false);
+                // Refresh application data
+                setTimeout(() => {
+                  window.location.reload();
+                }, 2000);
               } finally {
-                setIsActing(false);
+                setIsSubmittingCI(false);
               }
             }}
-            onCancel={() => setShowConfirm({ type: null })}
+            t={a}
+            applicationId={application.applicationId}
+            loanOfficerName={localStorage.getItem('fullName') || 'Loan Officer'}
           />
+
+          <SubmitOverlayToast open={isSubmittingCI} message="Submitting CI Checklist..." />
         </>
       )}
 

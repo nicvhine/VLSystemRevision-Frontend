@@ -10,7 +10,7 @@ export const useLoansPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<string>('');
-  const [activeFilter, setActiveFilter] = useState<'All' | 'Active' | 'Overdue' | 'Closed'>('All');
+  const [activeFilter, setActiveFilter] = useState<'All' | 'Active' | 'Overdue' | 'Closed' | 'Delinquent'>('All');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [role, setRole] = useState<'manager' | 'head' | 'loan officer'>('manager');
@@ -45,6 +45,10 @@ export const useLoansPage = () => {
     if (activeFilter === 'Active') return loan.status?.toLowerCase() === 'active';
     if (activeFilter === 'Overdue') return loan.status?.toLowerCase() === 'overdue';
     if (activeFilter === 'Closed') return loan.status?.toLowerCase() === 'closed';
+    if (activeFilter === 'Delinquent') {
+      // A loan is delinquent if credit score is <= 3 AND status is active
+      return (loan.creditScore || 0) <= 3 && loan.status?.toLowerCase() === 'active';
+    }
     return true;
   });
 
@@ -107,6 +111,24 @@ export const useLoansPage = () => {
   
   const t = translations.loanTermsTranslator[language];
 
+  // Calculate delinquent loan summary (credit score <= 3, status = active)
+  const activeLoans = loans.filter((loan) => loan.status?.toLowerCase() === 'active');
+  const delinquentLoans = activeLoans.filter((loan) => (loan.creditScore || 0) <= 3);
+  
+  const delinquentSummary = {
+    delinquentCount: delinquentLoans.length,
+    delinquentTotalAmount: delinquentLoans.reduce((sum, loan) => {
+      const balance = typeof loan.balance === 'string' ? parseFloat(loan.balance) : (loan.balance || 0);
+      return sum + balance;
+    }, 0),
+    activeCount: activeLoans.length,
+    activeTotalAmount: activeLoans.reduce((sum, loan) => {
+      const balance = typeof loan.balance === 'string' ? parseFloat(loan.balance) : (loan.balance || 0);
+      return sum + balance;
+    }, 0),
+    delinquentPercentage: activeLoans.length > 0 ? (delinquentLoans.length / activeLoans.length) * 100 : 0,
+  };
+
   return {
     role,
     language,
@@ -129,6 +151,7 @@ export const useLoansPage = () => {
     showingEnd,
     paginatedLoans,
     sortedLoans,
+    delinquentSummary,
     t,
   };
 };

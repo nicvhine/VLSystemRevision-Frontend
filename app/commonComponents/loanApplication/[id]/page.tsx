@@ -12,6 +12,7 @@ import OpenLoanAgreementModal from "@/app/commonComponents/modals/loanAgreement/
 import ReleaseForm from "../../modals/loanAgreement/regularLoan/releaseForm";
 import SetScheduleModal from "@/app/commonComponents/modals/loanApplication/scheduleModal";
 import AccountModal from "@/app/commonComponents/modals/loanApplication/accountModal";
+import ViewCIChecklistModal from "@/app/commonComponents/modals/loanApplication/viewCIChecklistModal";
 import ApplicationButtons from "./components/applicationButtons";
 
 // Wrappers
@@ -71,6 +72,7 @@ export default function ApplicationDetailsPage() {
   const [withdrawalConfirmModal, setWithdrawalConfirmModal] = useState<{ show: boolean; action: 'approve' | 'deny' | null; reason: string }>({ show: false, action: null, reason: '' });
   const [isProcessingWithdrawal, setIsProcessingWithdrawal] = useState(false);
   const [expandWithdrawal, setExpandWithdrawal] = useState(false);
+  const [showCIChecklistModal, setShowCIChecklistModal] = useState(false);
 
   const notFoundText = language === 'ceb' ? 'Wala nakit-an ang aplikasyon' : 'Application not found';
 
@@ -327,6 +329,16 @@ export default function ApplicationDetailsPage() {
                     }`}>
                       {application?.status || "Unknown"}
                     </span>
+
+                    {(application?.status === "Cleared" || application?.status === "Approved" || application?.status === "Disbursed" || application?.status === "Active") && (
+                      <button
+                        onClick={() => setShowCIChecklistModal(true)}
+                        title="View CI Checklist"
+                        className="inline-flex items-center justify-center px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors text-xs font-medium"
+                      >
+                        📋 View CI Checklist
+                      </button>
+                    )}
 
                     <span className="text-sm text-gray-500">
                       {translateLoanType(application?.loanType, language)}
@@ -617,6 +629,16 @@ export default function ApplicationDetailsPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* CI Checklist Modal */}
+        {application && (
+          <ViewCIChecklistModal
+            isOpen={showCIChecklistModal}
+            onCloseAction={() => setShowCIChecklistModal(false)}
+            applicationId={application.applicationId}
+            authFetchAction={authFetch}
+          />
         )}
       </div>
     </Wrapper>

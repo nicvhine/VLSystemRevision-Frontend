@@ -47,6 +47,7 @@ const loanTermsTranslator = {
       l30: "Approved",
       l31: "Disbursed",
       l32: "Denied",
+      l56: "Delinquent",
 
       //Pagination
       l33: "Rows per page:",
@@ -75,6 +76,12 @@ const loanTermsTranslator = {
       l53: "Date",
       l54: "Loan Amount",
       l55: "No loans found.",
+      l57: "Delinquent Loans Summary",
+      l58: "Active Delinquent Loans",
+      l59: "Overall Active Loans",
+      l60: "Delinquent Count",
+      l61: "Total Amount",
+      l62: "Percentage of Active Loans",
 
     },
     ceb: {
@@ -125,6 +132,7 @@ const loanTermsTranslator = {
       l30: "Gi-aprubahan",
       l31: "Gihatag",
       l32: "Gidumili",
+      l56: "Nag-delinquent",
 
       //Pagination
       l33: "Mga han-ay kada pahina:",
@@ -152,6 +160,12 @@ const loanTermsTranslator = {
       l53: "Petsa",
       l54: "Kantidad sa Pahulam",
       l55: "Walay nakit-an nga mga pahulam.",
+      l57: "Buod ng mga Nag-delinquent na Pahulam",
+      l58: "Aktibong Nag-delinquent na Pahulam",
+      l59: "Kinatibuk-ang Aktibong Pahulam",
+      l60: "Bilang ng Nag-delinquent",
+      l61: "Kinatibuk-ang Kantidad",
+      l62: "Porsyento ng Aktibong Pahulam",
     }
   };
   

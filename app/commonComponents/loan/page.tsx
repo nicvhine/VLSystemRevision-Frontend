@@ -29,6 +29,7 @@ export default function LoansPage() {
     language,
     activeFilter,
     setActiveFilter,
+    delinquentSummary,
   } = useLoansPage();
 
   if (loading) return <LoadingSpinner />;
@@ -40,12 +41,12 @@ export default function LoansPage() {
     role === "loan officer" ? LoanOfficer : role === "head" ? Head : Manager;
 
   const filterTabs: {
-    key: "All" | "Active" | "Overdue" | "Closed";
+    key: "All" | "Active"  | "Closed" | "Delinquent";
     label: string;
   }[] = [
     { key: "All", label: t.l23 },
     { key: "Active", label: t.l24 },
-    { key: "Overdue", label: t.l25 },
+    { key: "Delinquent", label: t.l56 },
     { key: "Closed", label: t.l26 },
   ];
 
@@ -76,6 +77,37 @@ export default function LoansPage() {
               </button>
             ))}
           </div>
+
+          {/* Delinquent Loans Summary */}
+          {activeFilter === 'Delinquent' && (
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-8">
+                {/* Delinquent Count */}
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2 uppercase tracking-wide">{t.l58}</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-red-600">{delinquentSummary.delinquentCount}</p>
+                  </div>
+                </div>
+
+                {/* Total Active Count */}
+                <div className="flex flex-col items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2 uppercase tracking-wide">{t.l59}</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-red-600">{delinquentSummary.activeCount}</p>
+                  </div>
+                </div>
+
+                {/* Percentage */}
+                <div className="flex flex-col items-center justify-center col-span-2 sm:col-span-1">
+                  <div className="text-center">
+                    <p className="text-xs sm:text-sm text-gray-600 font-medium mb-2 uppercase tracking-wide">{t.l62}</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-orange-600">{delinquentSummary.delinquentPercentage.toFixed(1)}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Search & Sort */}
           <Filter

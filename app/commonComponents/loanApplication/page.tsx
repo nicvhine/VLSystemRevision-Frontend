@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { FiChevronDown } from "react-icons/fi";
+import { FiChevronDown, FiEye } from "react-icons/fi";
 import { Application } from "../utils/Types/application";
+import ViewCIChecklistModal from "../modals/loanApplication/viewCIChecklistModal";
 import translations from "../translation";
 import { authFetch, filterApplications } from "./function";
 import { formatCurrency, formatDate } from "../utils/formatters";
@@ -35,6 +36,8 @@ export default function ApplicationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [showCIChecklistModal, setShowCIChecklistModal] = useState(false);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -77,6 +80,14 @@ export default function ApplicationsPage() {
       )}
       {showErrorModal && (
         <ErrorModal isOpen={showErrorModal} message={modalMsg} onClose={() => setShowErrorModal(false)} />
+      )}
+      {selectedApplicationId && (
+        <ViewCIChecklistModal
+          isOpen={showCIChecklistModal}
+          onCloseAction={() => setShowCIChecklistModal(false)}
+          applicationId={selectedApplicationId}
+          authFetchAction={authFetch}
+        />
       )}
       <div className="min-h-screen bg-gray-50">
         <div className="mx-auto px-4 sm:px-6 py-4 sm:py-8">
