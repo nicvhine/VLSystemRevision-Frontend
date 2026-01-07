@@ -766,9 +766,7 @@ export default function LoansDetailClient({ loanId }: LoansDetailClientProps) {
             />
           </div>
 
-          {/* DELINQUENCY STATUS CARD */}
-          <DelinquencyCard collections={collections} />
-
+          
           {/* PAYMENT TRACKER - Full Width */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
             <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
